@@ -21,8 +21,26 @@
   --color-orange-soft: #FFEDD5;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-text-main);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::selection {
+  background: var(--color-blue-soft);
+  color: var(--color-navy);
 }

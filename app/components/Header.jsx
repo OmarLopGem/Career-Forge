@@ -14,16 +14,20 @@ export default function Header() {
       href: '/',
     },
     {
-      name: 'Quizzes',
-      href: '/quizzes',
+      name: 'Job Matches',
+      href: '/jobs',
     },
     {
-      name: 'Forge CV',
-      href: '/forge-cv',
+      name: 'Calendar',
+      href: '/calendar',
     },
     {
-      name: 'Forge Job',
-      href: '/forge-job',
+      name: 'Practice',
+      href: '/practice',
+    },
+    {
+      name: 'Profile',
+      href: '/profile',
     },
   ]
 
@@ -41,8 +45,8 @@ export default function Header() {
         <div className="flex items-center justify-between">
           
           {/* Logo */}
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex items-center gap-3 group"
             onClick={() => setIsOpen(false)}
           >
@@ -58,7 +62,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             {navLinks.map((link) => {
               const isActive = isActiveLink(link.href)
 
@@ -91,6 +95,13 @@ export default function Header() {
                 </Link>
               )
             })}
+
+            <Link
+              href="/resume"
+              className="ml-3 rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
+            >
+              Upload Resume
+            </Link>
           </div>
 
           {/* Mobile Button */}
@@ -99,7 +110,7 @@ export default function Header() {
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle navigation menu"
             aria-expanded={isOpen}
-            className="md:hidden flex flex-col items-center justify-center gap-1.5 h-10 w-10 rounded-lg hover:bg-cyan-soft transition-colors"
+            className="lg:hidden flex flex-col items-center justify-center gap-1.5 h-10 w-10 rounded-lg hover:bg-cyan-soft transition-colors"
           >
             <span
               className={`
@@ -125,7 +136,7 @@ export default function Header() {
         {/* Mobile Navigation */}
         <div
           className={`
-            md:hidden overflow-hidden transition-all duration-300 ease-in-out
+            lg:hidden overflow-hidden transition-all duration-300 ease-in-out
             ${isOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'}
           `}
         >
@@ -151,6 +162,14 @@ export default function Header() {
                 </Link>
               )
             })}
+
+            <Link
+              href="/resume"
+              onClick={() => setIsOpen(false)}
+              className="mt-2 rounded-xl bg-brand-blue px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
+            >
+              Upload Resume
+            </Link>
           </div>
         </div>
       </nav>
