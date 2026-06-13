@@ -8,24 +8,26 @@ export default function Footer() {
       title: 'Platform',
       links: [
         { name: 'Home', href: '/' },
-        { name: 'Quizzes', href: '/quizzes' },
-        { name: 'Forge CV', href: '/forge-cv' },
-        { name: 'Forge Job', href: '/forge-job' },
+        { name: 'Job Matches', href: '/jobs' },
+        { name: 'Calendar', href: '/calendar' },
+        { name: 'Practice', href: '/practice' },
+        { name: 'Profile', href: '/profile' },
       ],
     },
     {
-      title: 'Resources',
+      title: 'Career Tools',
       links: [
-        { name: 'Career Tips', href: '/career-tips' },
-        { name: 'CV Guide', href: '/cv-guide' },
-        { name: 'Job Search', href: '/job-search' },
+        { name: 'Resume Studio', href: '/resume' },
+        { name: 'Progress Tracker', href: '/progress' },
+        { name: 'Notifications', href: '/notifications' },
+        { name: 'Career Profile', href: '/profile' },
       ],
     },
     {
       title: 'Company',
       links: [
         { name: 'About', href: '/about' },
-        { name: 'Contact', href: '/contact' },
+        { name: 'Contact Admin', href: '/contact' },
         { name: 'Privacy Policy', href: '/privacy' },
       ],
     },
@@ -51,8 +53,16 @@ export default function Footer() {
             </Link>
 
             <p className="mt-4 text-sm leading-6 text-text-muted max-w-xs">
-              Build better career opportunities with smarter quizzes, stronger CVs, and focused job tools.
+              A career workspace that helps job seekers improve their resume,
+              find matched jobs, track applications, and prepare for interviews.
             </p>
+
+            <Link
+              href="/resume"
+              className="mt-5 inline-flex rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5"
+            >
+              Upload Resume
+            </Link>
           </div>
 
           {/* Links */}
