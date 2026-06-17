@@ -23,7 +23,7 @@ export default function Header() {
     },
     {
       name: 'Practice',
-      href: '/practice',
+      href: '/quiz',
     },
     {
       name: 'Profile',
