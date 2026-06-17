@@ -10,6 +10,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "vitest.config.mjs",
+    "vitest.setup.js",
+    "coverage/**",
   ]),
 ]);
 

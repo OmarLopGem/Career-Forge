@@ -8,6 +8,7 @@ export default function Footer() {
       title: 'Platform',
       links: [
         { name: 'Home', href: '/' },
+        { name: 'CV Assistant', href: '/cv-assistant' },
         { name: 'Job Matches', href: '/jobs' },
         { name: 'Calendar', href: '/calendar' },
         { name: 'Practice', href: '/practice' },

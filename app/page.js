@@ -17,6 +17,13 @@ export default function Home() {
       label: 'AI Resume Analysis',
     },
     {
+      title: 'CV Assistant',
+      description:
+        'Upload a CV, review the parsed profile, get AI niche and improvement feedback, choose a template, and download a polished PDF.',
+      href: '/cv-assistant',
+      label: '5-Step CV Assistant',
+    },
+    {
       title: 'Career Profile',
       description:
         'Create an online CV with your photo, skills, experience, description, and job-specific professional summaries.',

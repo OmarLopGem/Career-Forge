@@ -9,6 +9,19 @@ export default function ToolPreviewCarousel() {
 
   const previews = [
     {
+      title: 'CV Assistant',
+      subtitle: '5-step guided flow',
+      description:
+        'Upload, parse, review, analyze and download a polished resume in one of five templates.',
+      href: '/cv-assistant',
+      stat: '5',
+      statLabel: 'Templates',
+      badge: 'CV',
+      color: 'text-brand-blue',
+      bg: 'bg-blue-soft',
+      bar: 'bg-brand-blue',
+    },
+    {
       title: 'Resume Studio',
       subtitle: 'AI Resume Analysis',
       description:
