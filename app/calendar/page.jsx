@@ -303,10 +303,10 @@ function autoArchiveApplications(applications) {
     const daysWithoutUpdate = getDaysDifference(application.lastActivityAt, today)
 
     if (
-      daysWithoutUpdate >= 30 &&
-      !application.isArchived &&
-      !application.isDeleted &&
-      archiveableStatuses.includes(application.status)
+        daysWithoutUpdate >= 30 &&
+        !application.isArchived &&
+        !application.isDeleted &&
+        archiveableStatuses.includes(application.status)
     ) {
       return {
         ...application,
@@ -361,7 +361,7 @@ export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(demoMonth)
   const [selectedDate, setSelectedDate] = useState(demoSelectedDate)
   const [jobApplications, setJobApplications] = useState(() =>
-    autoArchiveApplications(initialJobApplications)
+      autoArchiveApplications(initialJobApplications)
   )
   const [calendarEvents, setCalendarEvents] = useState(initialCalendarEvents)
   const [activeView, setActiveView] = useState('active')
@@ -397,20 +397,20 @@ export default function CalendarPage() {
 
   const visibleEvents = useMemo(() => {
     return calendarEvents.filter((event) =>
-      visibleApplicationIds.includes(event.jobApplicationId)
+        visibleApplicationIds.includes(event.jobApplicationId)
     )
   }, [calendarEvents, visibleApplicationIds])
 
   const selectedDateEvents = visibleEvents.filter(
-    (event) => event.startDate === selectedDate
+      (event) => event.startDate === selectedDate
   )
 
   const activeApplicationsCount = jobApplications.filter(
-    (application) => !application.isArchived && !application.isDeleted
+      (application) => !application.isArchived && !application.isDeleted
   ).length
 
   const archivedApplicationsCount = jobApplications.filter(
-    (application) => application.isArchived && !application.isDeleted
+      (application) => application.isArchived && !application.isDeleted
   ).length
 
   const getApplicationById = (applicationId) => {
@@ -449,13 +449,13 @@ export default function CalendarPage() {
 
   const goToPreviousMonth = () => {
     setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+        new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
     )
   }
 
   const goToNextMonth = () => {
     setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
     )
   }
 
@@ -466,7 +466,7 @@ export default function CalendarPage() {
 
   const openAddEventModal = () => {
     const firstActiveApplication = jobApplications.find(
-      (application) => !application.isArchived && !application.isDeleted
+        (application) => !application.isArchived && !application.isDeleted
     )
 
     setEventForm({
@@ -511,26 +511,26 @@ export default function CalendarPage() {
     setCalendarEvents((currentEvents) => [...currentEvents, newEvent])
 
     setJobApplications((currentApplications) =>
-      currentApplications.map((application) => {
-        if (application.id !== eventForm.jobApplicationId) return application
+        currentApplications.map((application) => {
+          if (application.id !== eventForm.jobApplicationId) return application
 
-        let newStatus = application.status
+          let newStatus = application.status
 
-        if (eventForm.type === 'interview') {
-          newStatus = 'interview'
-        }
+          if (eventForm.type === 'interview') {
+            newStatus = 'interview'
+          }
 
-        if (eventForm.type === 'promised_response' || eventForm.type === 'follow_up') {
-          newStatus = 'waiting_response'
-        }
+          if (eventForm.type === 'promised_response' || eventForm.type === 'follow_up') {
+            newStatus = 'waiting_response'
+          }
 
-        return {
-          ...application,
-          status: application.isArchived ? application.status : newStatus,
-          lastActivityAt: eventForm.startDate,
-          updatedAt: new Date().toISOString(),
-        }
-      })
+          return {
+            ...application,
+            status: application.isArchived ? application.status : newStatus,
+            lastActivityAt: eventForm.startDate,
+            updatedAt: new Date().toISOString(),
+          }
+        })
     )
 
     setSelectedDate(eventForm.startDate)
@@ -539,371 +539,635 @@ export default function CalendarPage() {
 
   const handleDeleteApplication = (applicationId) => {
     const confirmed = window.confirm(
-      'Are you sure you want to delete this job process? This will remove it from your active list.'
+        'Are you sure you want to delete this job process? This will remove it from your active list.'
     )
 
     if (!confirmed) return
 
     setJobApplications((currentApplications) =>
-      currentApplications.map((application) => {
-        if (application.id !== applicationId) return application
+        currentApplications.map((application) => {
+          if (application.id !== applicationId) return application
 
-        return {
-          ...application,
-          isDeleted: true,
-          deletedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      })
+          return {
+            ...application,
+            isDeleted: true,
+            deletedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+        })
     )
   }
 
   const handleArchiveApplication = (applicationId) => {
     setJobApplications((currentApplications) =>
-      currentApplications.map((application) => {
-        if (application.id !== applicationId) return application
+        currentApplications.map((application) => {
+          if (application.id !== applicationId) return application
 
-        return {
-          ...application,
-          previousStatus: application.status,
-          status: 'archived',
-          isArchived: true,
-          archivedAt: new Date().toISOString(),
-          archivedReason: 'Archived manually',
-          updatedAt: new Date().toISOString(),
-        }
-      })
+          return {
+            ...application,
+            previousStatus: application.status,
+            status: 'archived',
+            isArchived: true,
+            archivedAt: new Date().toISOString(),
+            archivedReason: 'Archived manually',
+            updatedAt: new Date().toISOString(),
+          }
+        })
     )
   }
 
   const handleRecoverApplication = (applicationId) => {
     setJobApplications((currentApplications) =>
-      currentApplications.map((application) => {
-        if (application.id !== applicationId) return application
+        currentApplications.map((application) => {
+          if (application.id !== applicationId) return application
 
-        return {
-          ...application,
-          status: application.previousStatus || 'waiting_response',
-          previousStatus: null,
-          isArchived: false,
-          archivedAt: null,
-          archivedReason: null,
-          lastActivityAt: formatDate(today),
-          updatedAt: new Date().toISOString(),
-        }
-      })
+          return {
+            ...application,
+            status: application.previousStatus || 'waiting_response',
+            previousStatus: null,
+            isArchived: false,
+            archivedAt: null,
+            archivedReason: null,
+            lastActivityAt: formatDate(today),
+            updatedAt: new Date().toISOString(),
+          }
+        })
     )
   }
 
   return (
-    <div className="bg-background min-h-screen">
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div>
+      <div className="bg-background min-h-screen">
+        <section className="max-w-7xl mx-auto px-6 py-10">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div>
             <span className="inline-flex rounded-full bg-blue-soft px-4 py-2 text-sm font-medium text-brand-blue">
               Application Calendar
             </span>
 
-            <h1 className="mt-5 text-4xl md:text-5xl font-bold text-navy tracking-tight">
-              Track your job application process.
-            </h1>
+              <h1 className="mt-5 text-4xl md:text-5xl font-bold text-navy tracking-tight">
+                Track your job application process.
+              </h1>
 
-            <p className="mt-4 text-text-muted max-w-2xl leading-7">
-              Organize interviews, deadlines, follow-ups, promised response dates,
-              and job statuses in one visual calendar.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={openAddEventModal}
-            className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
-          >
-            Add Event
-          </button>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl bg-surface border border-border p-5">
-            <p className="text-sm text-text-muted">Active Applications</p>
-            <p className="mt-2 text-3xl font-bold text-brand-blue">
-              {activeApplicationsCount}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-surface border border-border p-5">
-            <p className="text-sm text-text-muted">Archived Applications</p>
-            <p className="mt-2 text-3xl font-bold text-forge-orange">
-              {archivedApplicationsCount}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-surface border border-border p-5">
-            <p className="text-sm text-text-muted">Selected Day Events</p>
-            <p className="mt-2 text-3xl font-bold text-success-green">
-              {selectedDateEvents.length}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setActiveView('active')}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-300 ${
-              activeView === 'active'
-                ? 'bg-brand-blue text-white'
-                : 'bg-surface border border-border text-text-muted hover:text-brand-blue'
-            }`}
-          >
-            Active Applications
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveView('archived')}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-300 ${
-              activeView === 'archived'
-                ? 'bg-forge-orange text-white'
-                : 'bg-surface border border-border text-text-muted hover:text-forge-orange'
-            }`}
-          >
-            Archived
-          </button>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-8">
-          <div className="rounded-3xl bg-surface border border-border p-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-navy">
-                  {formatMonthTitle(currentMonth)}
-                </h2>
-
-                <p className="mt-1 text-sm text-text-muted">
-                  Select a day to view related job events.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={goToPreviousMonth}
-                  className="h-10 w-10 rounded-full border border-border text-navy hover:text-brand-blue hover:border-brand-blue transition-colors"
-                >
-                  ←
-                </button>
-
-                <button
-                  type="button"
-                  onClick={goToToday}
-                  className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-muted hover:text-brand-blue hover:border-brand-blue transition-colors"
-                >
-                  Today
-                </button>
-
-                <button
-                  type="button"
-                  onClick={goToNextMonth}
-                  className="h-10 w-10 rounded-full border border-border text-navy hover:text-brand-blue hover:border-brand-blue transition-colors"
-                >
-                  →
-                </button>
-              </div>
+              <p className="mt-4 text-text-muted max-w-2xl leading-7">
+                Organize interviews, deadlines, follow-ups, promised response dates,
+                and job statuses in one visual calendar.
+              </p>
             </div>
 
-            <div className="mt-8 grid grid-cols-7 gap-2">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div
-                  key={day}
-                  className="text-center text-xs font-semibold text-text-muted uppercase"
-                >
-                  {day}
+            <button
+                type="button"
+                onClick={openAddEventModal}
+                className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
+            >
+              Add Event
+            </button>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-2xl bg-surface border border-border p-5">
+              <p className="text-sm text-text-muted">Active Applications</p>
+              <p className="mt-2 text-3xl font-bold text-brand-blue">
+                {activeApplicationsCount}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-surface border border-border p-5">
+              <p className="text-sm text-text-muted">Archived Applications</p>
+              <p className="mt-2 text-3xl font-bold text-forge-orange">
+                {archivedApplicationsCount}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-surface border border-border p-5">
+              <p className="text-sm text-text-muted">Selected Day Events</p>
+              <p className="mt-2 text-3xl font-bold text-success-green">
+                {selectedDateEvents.length}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <button
+                type="button"
+                onClick={() => setActiveView('active')}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                    activeView === 'active'
+                        ? 'bg-brand-blue text-white'
+                        : 'bg-surface border border-border text-text-muted hover:text-brand-blue'
+                }`}
+            >
+              Active Applications
+            </button>
+
+            <button
+                type="button"
+                onClick={() => setActiveView('archived')}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                    activeView === 'archived'
+                        ? 'bg-forge-orange text-white'
+                        : 'bg-surface border border-border text-text-muted hover:text-forge-orange'
+                }`}
+            >
+              Archived
+            </button>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-8">
+            <div className="rounded-3xl bg-surface border border-border p-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-navy">
+                    {formatMonthTitle(currentMonth)}
+                  </h2>
+
+                  <p className="mt-1 text-sm text-text-muted">
+                    Select a day to view related job events.
+                  </p>
                 </div>
-              ))}
 
-              {monthDays.map((day, index) => {
-                const dateString = day ? formatDate(day) : null
-                const dayEvents = day ? getEventsForDate(day) : []
-                const isSelected = dateString === selectedDate
-                const isToday = dateString === formatDate(today)
-
-                return (
+                <div className="flex items-center gap-2">
                   <button
-                    key={index}
-                    type="button"
-                    disabled={!day}
-                    onClick={() => day && setSelectedDate(dateString)}
-                    className={`
+                      type="button"
+                      onClick={goToPreviousMonth}
+                      className="h-10 w-10 rounded-full border border-border text-navy hover:text-brand-blue hover:border-brand-blue transition-colors"
+                  >
+                    ←
+                  </button>
+
+                  <button
+                      type="button"
+                      onClick={goToToday}
+                      className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-muted hover:text-brand-blue hover:border-brand-blue transition-colors"
+                  >
+                    Today
+                  </button>
+
+                  <button
+                      type="button"
+                      onClick={goToNextMonth}
+                      className="h-10 w-10 rounded-full border border-border text-navy hover:text-brand-blue hover:border-brand-blue transition-colors"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-8 grid grid-cols-7 gap-2">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    <div
+                        key={day}
+                        className="text-center text-xs font-semibold text-text-muted uppercase"
+                    >
+                      {day}
+                    </div>
+                ))}
+
+                {monthDays.map((day, index) => {
+                  const dateString = day ? formatDate(day) : null
+                  const dayEvents = day ? getEventsForDate(day) : []
+                  const isSelected = dateString === selectedDate
+                  const isToday = dateString === formatDate(today)
+
+                  return (
+                      <button
+                          key={index}
+                          type="button"
+                          disabled={!day}
+                          onClick={() => day && setSelectedDate(dateString)}
+                          className={`
                       min-h-32 rounded-2xl border p-3 text-left transition-all duration-300
                       ${
-                        day
-                          ? 'bg-background hover:border-brand-blue hover:-translate-y-0.5'
-                          : 'bg-transparent border-transparent cursor-default'
-                      }
+                              day
+                                  ? 'bg-background hover:border-brand-blue hover:-translate-y-0.5'
+                                  : 'bg-transparent border-transparent cursor-default'
+                          }
                       ${
-                        isSelected
-                          ? 'border-brand-blue ring-2 ring-blue-soft'
-                          : 'border-border'
-                      }
+                              isSelected
+                                  ? 'border-brand-blue ring-2 ring-blue-soft'
+                                  : 'border-border'
+                          }
                     `}
-                  >
-                    {day && (
-                      <>
-                        <div className="flex items-center justify-between">
+                      >
+                        {day && (
+                            <>
+                              <div className="flex items-center justify-between">
                           <span
-                            className={`text-sm font-bold ${
-                              isToday ? 'text-brand-blue' : 'text-navy'
-                            }`}
+                              className={`text-sm font-bold ${
+                                  isToday ? 'text-brand-blue' : 'text-navy'
+                              }`}
                           >
                             {day.getDate()}
                           </span>
 
-                          {isToday && (
-                            <span className="rounded-full bg-blue-soft px-2 py-0.5 text-[10px] font-semibold text-brand-blue">
+                                {isToday && (
+                                    <span className="rounded-full bg-blue-soft px-2 py-0.5 text-[10px] font-semibold text-brand-blue">
                               Today
                             </span>
-                          )}
-                        </div>
-
-                        <div className="mt-3 space-y-2">
-                          {dayEvents.slice(0, 2).map((event) => {
-                            const { jobInfo } = getJobInfoFromEvent(event)
-
-                            return (
-                              <div
-                                key={event.id}
-                                className={`rounded-lg px-2 py-1 text-[11px] font-semibold truncate ${
-                                  eventTypeStyles[event.type]
-                                }`}
-                              >
-                                {eventTypeLabels[event.type]} · {jobInfo?.company}
+                                )}
                               </div>
-                            )
-                          })}
 
-                          {dayEvents.length > 2 && (
-                            <p className="text-[11px] text-text-muted">
-                              +{dayEvents.length - 2} more
-                            </p>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+                              <div className="mt-3 space-y-2">
+                                {dayEvents.slice(0, 2).map((event) => {
+                                  const { jobInfo } = getJobInfoFromEvent(event)
 
-          <div className="space-y-6">
-            <div className="rounded-3xl bg-surface border border-border p-6">
-              <h2 className="text-xl font-bold text-navy">
-                Selected Day
-              </h2>
+                                  return (
+                                      <div
+                                          key={event.id}
+                                          className={`rounded-lg px-2 py-1 text-[11px] font-semibold truncate ${
+                                              eventTypeStyles[event.type]
+                                          }`}
+                                      >
+                                        {eventTypeLabels[event.type]} · {jobInfo?.company}
+                                      </div>
+                                  )
+                                })}
 
-              <p className="mt-1 text-sm text-text-muted">
-                {selectedDate}
-              </p>
-
-              <div className="mt-5 space-y-4">
-                {selectedDateEvents.length === 0 ? (
-                  <p className="text-sm text-text-muted">
-                    No events for this date.
-                  </p>
-                ) : (
-                  selectedDateEvents.map((event) => {
-                    const { application, jobInfo } = getJobInfoFromEvent(event)
-
-                    return (
-                      <div
-                        key={event.id}
-                        className="rounded-2xl bg-background border border-border p-4"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="font-bold text-navy">
-                              {event.title}
-                            </h3>
-
-                            <p className="mt-1 text-sm text-text-muted">
-                              {event.startTime} - {event.endTime}
-                            </p>
-                          </div>
-
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                              eventTypeStyles[event.type]
-                            }`}
-                          >
-                            {eventTypeLabels[event.type]}
-                          </span>
-                        </div>
-
-                        {application && jobInfo && (
-                          <div className="mt-4">
-                            <p className="text-sm font-semibold text-navy">
-                              {jobInfo.title}
-                            </p>
-
-                            <p className="text-sm text-text-muted">
-                              {jobInfo.company} · {jobInfo.location}
-                            </p>
-
-                            <span
-                              className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                jobStatusStyles[application.status]
-                              }`}
-                            >
-                              {jobStatusLabels[application.status]}
-                            </span>
-                          </div>
+                                {dayEvents.length > 2 && (
+                                    <p className="text-[11px] text-text-muted">
+                                      +{dayEvents.length - 2} more
+                                    </p>
+                                )}
+                              </div>
+                            </>
                         )}
-
-                        {event.notes && (
-                          <p className="mt-4 text-sm leading-6 text-text-muted">
-                            {event.notes}
-                          </p>
-                        )}
-                      </div>
-                    )
-                  })
-                )}
+                      </button>
+                  )
+                })}
               </div>
             </div>
 
-            <div className="rounded-3xl bg-surface border border-border p-6">
-              <h2 className="text-xl font-bold text-navy">
-                {activeView === 'archived' ? 'Archived Jobs' : 'Job Applications'}
-              </h2>
+            <div className="space-y-6">
+              <div className="rounded-3xl bg-surface border border-border p-6">
+                <h2 className="text-xl font-bold text-navy">
+                  Selected Day
+                </h2>
 
-              <p className="mt-1 text-sm text-text-muted">
-                {activeView === 'archived'
-                  ? 'Jobs with no recent updates.'
-                  : 'Current applications being tracked.'}
-              </p>
+                <p className="mt-1 text-sm text-text-muted">
+                  {selectedDate}
+                </p>
 
-              <div className="mt-5 space-y-4">
-                {visibleApplications.length === 0 ? (
-                  <p className="text-sm text-text-muted">
-                    No jobs to show.
-                  </p>
-                ) : (
-                  visibleApplications.map((application) => {
-                    const jobInfo = getJobInfoFromApplication(application)
+                <div className="mt-5 space-y-4">
+                  {selectedDateEvents.length === 0 ? (
+                      <p className="text-sm text-text-muted">
+                        No events for this date.
+                      </p>
+                  ) : (
+                      selectedDateEvents.map((event) => {
+                        const { application, jobInfo } = getJobInfoFromEvent(event)
 
-                    return (
-                      <div
-                        key={application.id}
-                        className="rounded-2xl bg-background border border-border p-4"
+                        return (
+                            <div
+                                key={event.id}
+                                className="rounded-2xl bg-background border border-border p-4"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <h3 className="font-bold text-navy">
+                                    {event.title}
+                                  </h3>
+
+                                  <p className="mt-1 text-sm text-text-muted">
+                                    {event.startTime} - {event.endTime}
+                                  </p>
+                                </div>
+
+                                <span
+                                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                        eventTypeStyles[event.type]
+                                    }`}
+                                >
+                            {eventTypeLabels[event.type]}
+                          </span>
+                              </div>
+
+                              {application && jobInfo && (
+                                  <div className="mt-4">
+                                    <p className="text-sm font-semibold text-navy">
+                                      {jobInfo.title}
+                                    </p>
+
+                                    <p className="text-sm text-text-muted">
+                                      {jobInfo.company} · {jobInfo.location}
+                                    </p>
+
+                                    <span
+                                        className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                                            jobStatusStyles[application.status]
+                                        }`}
+                                    >
+                              {jobStatusLabels[application.status]}
+                            </span>
+                                  </div>
+                              )}
+
+                              {event.notes && (
+                                  <p className="mt-4 text-sm leading-6 text-text-muted">
+                                    {event.notes}
+                                  </p>
+                              )}
+                            </div>
+                        )
+                      })
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-3xl bg-surface border border-border p-6">
+                <h2 className="text-xl font-bold text-navy">
+                  {activeView === 'archived' ? 'Archived Jobs' : 'Job Applications'}
+                </h2>
+
+                <p className="mt-1 text-sm text-text-muted">
+                  {activeView === 'archived'
+                      ? 'Jobs with no recent updates.'
+                      : 'Current applications being tracked.'}
+                </p>
+
+                <div className="mt-5 space-y-4">
+                  {visibleApplications.length === 0 ? (
+                      <p className="text-sm text-text-muted">
+                        No jobs to show.
+                      </p>
+                  ) : (
+                      visibleApplications.map((application) => {
+                        const jobInfo = getJobInfoFromApplication(application)
+
+                        return (
+                            <div
+                                key={application.id}
+                                className="rounded-2xl bg-background border border-border p-4"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <h3 className="font-bold text-navy">
+                                    {jobInfo?.title}
+                                  </h3>
+
+                                  <p className="mt-1 text-sm text-text-muted">
+                                    {jobInfo?.company} · {jobInfo?.location}
+                                  </p>
+                                </div>
+
+                                <span
+                                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                        jobStatusStyles[application.status]
+                                    }`}
+                                >
+                            {jobStatusLabels[application.status]}
+                          </span>
+                              </div>
+
+                              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <p className="text-text-muted">Applied</p>
+                                  <p className="font-semibold text-navy">
+                                    {application.appliedAt}
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="text-text-muted">Last Activity</p>
+                                  <p className="font-semibold text-navy">
+                                    {application.lastActivityAt}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {application.isArchived && (
+                                  <p className="mt-4 text-sm text-text-muted">
+                                    Archived reason: {application.archivedReason}
+                                  </p>
+                              )}
+
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                {application.isArchived ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRecoverApplication(application.id)}
+                                        className="rounded-xl bg-brand-blue px-4 py-2 text-xs font-semibold text-white hover:bg-brand-blue-hover transition-colors"
+                                    >
+                                      Recover
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleArchiveApplication(application.id)}
+                                        className="rounded-xl bg-orange-soft px-4 py-2 text-xs font-semibold text-forge-orange transition-colors"
+                                    >
+                                      Archive
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteApplication(application.id)}
+                                    className="rounded-xl border border-border px-4 py-2 text-xs font-semibold text-text-muted hover:text-forge-orange hover:border-forge-orange transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                        )
+                      })
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {isModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 px-6">
+              <div className="w-full max-w-2xl rounded-3xl bg-surface p-6 md:p-8 shadow-xl">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-navy">
+                      Add Calendar Event
+                    </h2>
+
+                    <p className="mt-1 text-sm text-text-muted">
+                      Connect this event to one of your job applications.
+                    </p>
+                  </div>
+
+                  <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="h-10 w-10 rounded-full border border-border text-navy hover:text-forge-orange hover:border-forge-orange transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <form onSubmit={handleAddEvent} className="mt-6 space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-navy">
+                      Job Application
+                    </label>
+
+                    <select
+                        value={eventForm.jobApplicationId}
+                        onChange={(event) =>
+                            setEventForm({
+                              ...eventForm,
+                              jobApplicationId: event.target.value,
+                            })
+                        }
+                        className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+                    >
+                      {jobApplications
+                          .filter((application) => !application.isArchived && !application.isDeleted)
+                          .map((application) => {
+                            const jobInfo = getJobInfoFromApplication(application)
+
+                            return (
+                                <option key={application.id} value={application.id}>
+                                  {jobInfo?.title} · {jobInfo?.company}
+                                </option>
+                            )
+                          })}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy">
+                      Event Title
+                    </label>
+
+                    <input
+                        type="text"
+                        value={eventForm.title}
+                        onChange={(event) =>
+                            setEventForm({
+                              ...eventForm,
+                              title: event.target.value,
+                            })
+                        }
+                        placeholder="Example: Technical interview"
+                        className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-semibold text-navy">
+                        Event Type
+                      </label>
+
+                      <select
+                          value={eventForm.type}
+                          onChange={(event) =>
+                              setEventForm({
+                                ...eventForm,
+                                type: event.target.value,
+                              })
+                          }
+                          className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="font-bold text-navy">
-                              {jobInfo?.title}
-                            </h3>
+                        <option value="interview">Interview</option>
+                        <option value="deadline">Deadline</option>
+                        <option value="follow_up">Follow Up</option>
+                        <option value="promised_response">Promised Response</option>
+                        <option value="reminder">Reminder</option>
+                      </select>
+                    </div>
 
-                            <p className="mt-1 text-sm text-text-muted">
-                              {jobInfo?.company} · {jobInfo?.location}
-                            </p>
-                          </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-navy">
+                        Date
+                      </label>
+
+                      <input
+                          type="date"
+                          value={eventForm.startDate}
+                          onChange={(event) =>
+                              setEventForm({
+                                ...eventForm,
+                                startDate: event.target.value,
+                              })
+                          }
+                          className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-semibold text-navy">
+                        Start Time
+                      </label>
+
+                      <input
+                          type="time"
+                          value={eventForm.startTime}
+                          onChange={(event) =>
+                              setEventForm({
+                                ...eventForm,
+                                startTime: event.target.value,
+                              })
+                          }
+                          className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-navy">
+                        End Time
+                      </label>
+
+                      <input
+                          type="time"
+                          value={eventForm.endTime}
+                          onChange={(event) =>
+                              setEventForm({
+                                ...eventForm,
+                                endTime: event.target.value,
+                              })
+                          }
+                          className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy">
+                      Notes
+                    </label>
+
+                    <textarea
+                        value={eventForm.notes}
+                        onChange={(event) =>
+                            setEventForm({
+                              ...eventForm,
+                              notes: event.target.value,
+                            })
+                        }
+                        placeholder="Add details, reminders, or preparation notes..."
+                        rows={4}
+                        className="mt-2 w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+                    <button
+                        type="button"
+                        onClick={() => setIsModalOpen(false)}
+                        className="rounded-xl border border-border px-5 py-3 text-sm font-semibold text-text-muted hover:text-navy transition-colors"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white hover:bg-brand-blue-hover transition-colors"
+                    >
+                      Save Event
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+        )}
+      </div>
+  )
+}

@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b358ebba-b220-4cb4-8bae-881f2401bc62" name="Changes" comment="" />
+    <list default="true" id="b358ebba-b220-4cb4-8bae-881f2401bc62" name="Changes" comment="ai service connection">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/calendar/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/calendar/page.jsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -22,10 +25,69 @@
     <commands />
     <urls />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 5,
-  "fromUser": false
-}]]></component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0000000000000218" />
+      <entry key="S10" value="1.0000003298529097" />
+      <entry key="S30" value="1.0202381717120232" />
+      <entry key="S60" value="1.3502929120384752" />
+      <entry key="M2" value="3.3287118699666007" />
+      <entry key="M5" value="13.168766195868809" />
+      <entry key="M10" value="24.2128214149911" />
+      <entry key="M15" value="30.042961704157296" />
+      <entry key="M30" value="37.48257437952857" />
+      <entry key="H1" value="41.94722887389189" />
+      <entry key="H2" value="44.39529699693771" />
+      <entry key="H4" value="45.67743349502601" />
+      <entry key="D1" value="46.77670893033673" />
+      <entry key="W1" value="46.968030415674136" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="3.163049559372601E-86" />
+      <entry key="S5" value="6.31089385630614E-35" />
+      <entry key="S10" value="8.027598657858394E-18" />
+      <entry key="S30" value="2.4331225102179803E-6" />
+      <entry key="S60" value="0.002074234558348829" />
+      <entry key="M2" value="0.063307141977033" />
+      <entry key="M5" value="0.5004297899805752" />
+      <entry key="M10" value="0.999711961846787" />
+      <entry key="M15" value="1.2594779815928432" />
+      <entry key="M30" value="1.5869951667668727" />
+      <entry key="H1" value="1.7815340519597904" />
+      <entry key="H2" value="1.8875996738765208" />
+      <entry key="H4" value="1.9429847977684667" />
+      <entry key="D1" value="1.9903822416066268" />
+      <entry key="W1" value="1.9986231859003316" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.6198538499694932" />
+      <entry key="MS500" value="0.90877811644852" />
+      <entry key="S2" value="0.9763700862317316" />
+      <entry key="S5" value="0.9904801721236441" />
+      <entry key="S10" value="0.9952290331101488" />
+      <entry key="S30" value="1.0186441329859106" />
+      <entry key="S60" value="1.3515151593633192" />
+      <entry key="M2" value="3.391069018381491" />
+      <entry key="M5" value="13.667250957087717" />
+      <entry key="M10" value="25.210625286236546" />
+      <entry key="M15" value="31.300836341657536" />
+      <entry key="M30" value="39.06855655798789" />
+      <entry key="H1" value="43.728193114498566" />
+      <entry key="H2" value="46.28259442575846" />
+      <entry key="H4" value="47.620262632714635" />
+      <entry key="D1" value="48.767064580487535" />
+      <entry key="W1" value="48.9666497866849" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3F2ZcLCXvtoNI5usYydalvE3OH9" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -36,11 +98,12 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "cv-features",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "/home/dgarrido/Projects/carrer-forge",
     "node.js.detected.package.eslint": "true",
@@ -50,6 +113,23 @@
     "to.speed.mode.migration.done": "true"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="npm.dev" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -65,11 +145,25 @@
       <option name="presentableId" value="Default" />
       <updated>1781275202802</updated>
       <workItem from="1781275204340" duration="2075000" />
+      <workItem from="1781731682279" duration="872000" />
     </task>
+    <task id="LOCAL-00001" summary="ai service connection">
+      <option name="closed" value="true" />
+      <created>1781731751077</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1781731751078</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="ai service connection" />
+    <option name="LAST_COMMIT_MESSAGE" value="ai service connection" />
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>
