@@ -14,6 +14,10 @@ export default function Header() {
       href: '/',
     },
     {
+      name: 'CV Assistant',
+      href: '/cv-assistant',
+    },
+    {
       name: 'Job Matches',
       href: '/jobs',
     },
