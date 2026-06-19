@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import QuizQuestion from "@/app/models/QuizQuestion";
-import { quizData } from "@/app/quiz/questions";
+import { quizData } from "@/app/quiz/seedQuestions";
 
 export async function GET() {
   try {
