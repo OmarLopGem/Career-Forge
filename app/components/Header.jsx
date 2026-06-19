@@ -3,16 +3,20 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import LogoutButton from './LogoutButton.jsx'
 
-export default function Header() {
+export default function Header({ currentUser }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
-  const navLinks = [
+  const primaryLinks = [
     {
       name: 'Home',
       href: '/',
     },
+  ]
+
+  const authenticatedLinks = [
     {
       name: 'CV Assistant',
       href: '/cv-assistant',
@@ -34,6 +38,8 @@ export default function Header() {
       href: '/profile',
     },
   ]
+
+  const navLinks = currentUser ? [...primaryLinks, ...authenticatedLinks] : primaryLinks
 
   const isActiveLink = (href) => {
     if (href === '/') {
@@ -100,12 +106,35 @@ export default function Header() {
               )
             })}
 
-            <Link
-              href="/resume"
-              className="ml-3 rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
-            >
-              Upload Resume
-            </Link>
+            {currentUser ? (
+              <>
+                <span className="ml-3 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-navy">
+                  {currentUser.firstName}
+                </span>
+                <Link
+                  href="/cv-assistant"
+                  className="rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  Upload Resume
+                </Link>
+                <LogoutButton className="rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue" />
+              </>
+            ) : (
+              <div className="ml-3 flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-navy transition-colors hover:border-brand-blue hover:text-brand-blue"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile Button */}
@@ -167,13 +196,35 @@ export default function Header() {
               )
             })}
 
-            <Link
-              href="/resume"
-              onClick={() => setIsOpen(false)}
-              className="mt-2 rounded-xl bg-brand-blue px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
-            >
-              Upload Resume
-            </Link>
+            {currentUser ? (
+              <>
+                <Link
+                  href="/cv-assistant"
+                  onClick={() => setIsOpen(false)}
+                  className="mt-2 rounded-xl bg-brand-blue px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
+                >
+                  Upload Resume
+                </Link>
+                <LogoutButton className="rounded-xl border border-border px-4 py-3 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue" />
+              </>
+            ) : (
+              <div className="mt-2 grid gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-xl border border-border px-4 py-3 text-center text-sm font-semibold text-navy transition-colors hover:border-brand-blue hover:text-brand-blue"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-xl bg-brand-blue px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </nav>

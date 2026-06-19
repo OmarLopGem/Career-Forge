@@ -26,7 +26,7 @@ export default function ToolPreviewCarousel() {
       subtitle: 'AI Resume Analysis',
       description:
         'Upload your PDF resume and get a professional niche, improvement feedback, and resume score.',
-      href: '/resume',
+      href: '/cv-assistant',
       stat: '82%',
       statLabel: 'Resume Score',
       badge: 'Resume',
@@ -65,7 +65,7 @@ export default function ToolPreviewCarousel() {
       subtitle: 'Interview quizzes',
       description:
         'Take daily quizzes, build a streak, increase difficulty, and store your best grades.',
-      href: '/practice',
+      href: '/quiz',
       stat: '5',
       statLabel: 'Day Streak',
       badge: 'Quizzes',

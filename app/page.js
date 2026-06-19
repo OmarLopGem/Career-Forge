@@ -13,7 +13,7 @@ export default function Home() {
       title: 'Resume Studio',
       description:
         'Analyze your PDF resume, receive AI feedback, compare it with professional formats, and improve your score over time.',
-      href: '/resume',
+      href: '/cv-assistant',
       label: 'AI Resume Analysis',
     },
     {
@@ -48,7 +48,7 @@ export default function Home() {
       title: 'Practice',
       description:
         'Prepare with daily interview quizzes, feedback when your grade is below 7, difficulty progression, and streaks.',
-      href: '/practice',
+      href: '/quiz',
       label: 'Interview Prep',
     },
     {
@@ -109,7 +109,7 @@ export default function Home() {
 
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Link
-                href="/resume"
+                href="/cv-assistant"
                 className="inline-flex justify-center items-center rounded-xl bg-brand-blue px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
               >
                 Upload Resume
@@ -345,7 +345,7 @@ export default function Home() {
             </Link>
 
             <Link
-              href="/resume"
+              href="/cv-assistant"
               className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-navy transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-soft"
             >
               Upload Resume

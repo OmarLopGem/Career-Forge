@@ -11,14 +11,14 @@ export default function Footer() {
         { name: 'CV Assistant', href: '/cv-assistant' },
         { name: 'Job Matches', href: '/jobs' },
         { name: 'Calendar', href: '/calendar' },
-        { name: 'Practice', href: '/practice' },
+        { name: 'Practice', href: '/quiz' },
         { name: 'Profile', href: '/profile' },
       ],
     },
     {
       title: 'Career Tools',
       links: [
-        { name: 'Resume Studio', href: '/resume' },
+        { name: 'Resume Studio', href: '/cv-assistant' },
         { name: 'Progress Tracker', href: '/progress' },
         { name: 'Notifications', href: '/notifications' },
         { name: 'Career Profile', href: '/profile' },
@@ -59,7 +59,7 @@ export default function Footer() {
             </p>
 
             <Link
-              href="/resume"
+              href="/cv-assistant"
               className="mt-5 inline-flex rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5"
             >
               Upload Resume

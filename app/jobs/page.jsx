@@ -1,32 +1,29 @@
 import { redirect } from 'next/navigation'
-import CalendarClient from './CalendarClient.jsx'
+import JobsClient from './JobsClient.jsx'
 import { getCurrentUserFromRequest } from '@/lib/server/auth/current-user.js'
 import {
-  serviceListCalendarEvents,
   serviceListJobApplications,
   serviceListJobListings,
 } from '@/lib/job-tracker/server/job-tracker.service.js'
 
 export const dynamic = 'force-dynamic'
 
-export default async function CalendarPage() {
+export default async function JobsPage() {
   const user = await getCurrentUserFromRequest()
 
   if (!user) {
-    redirect('/login?redirectTo=/calendar')
+    redirect('/login?redirectTo=/jobs')
   }
 
-  const [{ applications }, { events }, { jobListings }] = await Promise.all([
-    serviceListJobApplications(),
-    serviceListCalendarEvents(),
+  const [{ jobListings }, { applications }] = await Promise.all([
     serviceListJobListings(),
+    serviceListJobApplications(),
   ])
 
   return (
-    <CalendarClient
-      initialApplications={applications}
-      initialEvents={events}
+    <JobsClient
       initialJobListings={jobListings}
+      initialApplications={applications}
     />
   )
 }
