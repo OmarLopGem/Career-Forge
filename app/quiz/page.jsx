@@ -1,19 +1,46 @@
 "use client";
 
-import { useState } from "react";
-import { quizData } from "./questions";
+import { useEffect, useState } from "react";
 
 export default function QuizPage() {
-  const jobTypes = Object.keys(quizData);
+  const jobTypes = [
+    "Frontend Developer",
+    "Backend Developer",
+    "Full Stack Developer",
+    "QA Tester",
+    "Database Developer",
+  ];
 
   const [jobType, setJobType] = useState(jobTypes[0]);
+  const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [score, setScore] = useState(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [showResult, setShowResult] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const questions = quizData[jobType];
+  useEffect(() => {
+    async function loadQuestions() {
+      setLoading(true);
+
+      try {
+        const res = await fetch(
+          `/api/quiz?jobType=${encodeURIComponent(jobType)}`
+        );
+
+        const data = await res.json();
+        setQuestions(data.questions || []);
+      } catch (error) {
+        console.error("Failed to load quiz questions:", error);
+        setQuestions([]);
+      }
+
+      setLoading(false);
+    }
+
+    loadQuestions();
+  }, [jobType]);
 
   const handleJobChange = (value) => {
     setJobType(value);
@@ -64,7 +91,7 @@ export default function QuizPage() {
     let totalCorrect = 0;
 
     questions.forEach((q) => {
-      const userAnswer = answers[q.id];
+      const userAnswer = answers[q._id];
 
       if (isAnswerCorrect(q, userAnswer)) {
         totalCorrect++;
@@ -100,8 +127,8 @@ export default function QuizPage() {
         </h1>
 
         <p className="mt-2 text-[var(--text-muted)]">
-          Select a job type and complete 20 interview questions. Total marks: 10.
-          Passing score: 7/10.
+          Select a job type and complete 20 interview questions. Total marks:
+          10. Passing score: 7/10.
         </p>
 
         <div className="mt-6">
@@ -132,84 +159,104 @@ export default function QuizPage() {
           </p>
         </div>
 
-        <div className="mt-8 space-y-6">
-          {questions.map((q, index) => (
-            <div
-              key={q.id}
-              className="rounded-xl border border-[var(--border)] bg-white p-5"
-            >
-              <div className="mb-3 flex items-start justify-between gap-4">
-                <h2 className="font-semibold text-[var(--navy)]">
-                  Q{index + 1}. {q.question}
-                </h2>
+        {loading && (
+          <p className="mt-8 text-[var(--text-muted)]">
+            Loading quiz questions...
+          </p>
+        )}
 
-                <span className="shrink-0 rounded-full bg-[var(--orange-soft)] px-3 py-1 text-sm font-medium text-[var(--forge-ornage)]">
-                  {q.type === "mcq"
-                    ? "MCQ"
-                    : q.type === "blank"
-                    ? "Blank"
-                    : "One Line"}
-                </span>
-              </div>
+        {!loading && questions.length === 0 && (
+          <p className="mt-8 font-semibold text-red-600">
+            No questions found for this job type.
+          </p>
+        )}
 
-              {q.type === "mcq" ? (
-                <div className="space-y-2">
-                  {q.options.map((option) => (
-                    <label
-                      key={option}
-                      className="flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--border)] p-3 hover:bg-[var(--cyan-soft)]"
-                    >
-                      <input
-                        type="radio"
-                        name={`${jobType}-question-${q.id}`}
-                        value={option}
-                        checked={answers[q.id] === option}
-                        onChange={(e) =>
-                          handleAnswerChange(q.id, e.target.value)
-                        }
-                      />
-                      <span className="text-[var(--text-main)]">{option}</span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <input
-                  type="text"
-                  value={answers[q.id] || ""}
-                  onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                  placeholder={
-                    q.type === "blank"
-                      ? "Fill in the blank..."
-                      : "Write one-line answer..."
-                  }
-                  className="w-full rounded-lg border border-[var(--border)] p-3 text-[var(--text-main)] outline-none focus:border-[var(--brand-blue)]"
-                />
-              )}
+        {!loading && questions.length > 0 && (
+          <>
+            <div className="mt-8 space-y-6">
+              {questions.map((q, index) => (
+                <div
+                  key={q._id}
+                  className="rounded-xl border border-[var(--border)] bg-white p-5"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-4">
+                    <h2 className="font-semibold text-[var(--navy)]">
+                      Q{index + 1}. {q.question}
+                    </h2>
 
-              {showResult && (
-                <div className="mt-4 rounded-lg bg-[var(--cyan-soft)] p-3">
-                  {isAnswerCorrect(q, answers[q.id]) ? (
-                    <p className="font-medium text-[var(--success-green)]">
-                      Correct
-                    </p>
+                    <span className="shrink-0 rounded-full bg-[var(--orange-soft)] px-3 py-1 text-sm font-medium text-[var(--forge-ornage)]">
+                      {q.type === "mcq"
+                        ? "MCQ"
+                        : q.type === "blank"
+                        ? "Blank"
+                        : "One Line"}
+                    </span>
+                  </div>
+
+                  {q.type === "mcq" ? (
+                    <div className="space-y-2">
+                      {q.options.map((option) => (
+                        <label
+                          key={option}
+                          className="flex cursor-pointer items-center gap-3 rounded-lg border border-[var(--border)] p-3 hover:bg-[var(--cyan-soft)]"
+                        >
+                          <input
+                            type="radio"
+                            name={`${jobType}-question-${q._id}`}
+                            value={option}
+                            checked={answers[q._id] === option}
+                            onChange={(e) =>
+                              handleAnswerChange(q._id, e.target.value)
+                            }
+                          />
+                          <span className="text-[var(--text-main)]">
+                            {option}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   ) : (
-                    <p className="font-medium text-[var(--forge-ornage)]">
-                      Incorrect. Correct answer: {q.answer}
-                    </p>
+                    <input
+                      type="text"
+                      value={answers[q._id] || ""}
+                      onChange={(e) =>
+                        handleAnswerChange(q._id, e.target.value)
+                      }
+                      placeholder={
+                        q.type === "blank"
+                          ? "Fill in the blank..."
+                          : "Write one-line answer..."
+                      }
+                      className="w-full rounded-lg border border-[var(--border)] p-3 text-[var(--text-main)] outline-none focus:border-[var(--brand-blue)]"
+                    />
+                  )}
+
+                  {showResult && (
+                    <div className="mt-4 rounded-lg bg-[var(--cyan-soft)] p-3">
+                      {isAnswerCorrect(q, answers[q._id]) ? (
+                        <p className="font-medium text-[var(--success-green)]">
+                          Correct
+                        </p>
+                      ) : (
+                        <p className="font-medium text-[var(--forge-ornage)]">
+                          Incorrect. Correct answer: {q.answer}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
 
-        {!showResult && (
-          <button
-  onClick={submitQuiz}
-  className="mt-8 rounded-xl bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
->
-  Submit Quiz
-</button>
+            {!showResult && (
+              <button
+                onClick={submitQuiz}
+                className="mt-8 rounded-xl bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+              >
+                Submit Quiz
+              </button>
+            )}
+          </>
         )}
 
         {showResult && (
@@ -240,12 +287,12 @@ export default function QuizPage() {
 
             {score < 7 && (
               <button
-  onClick={retakeQuiz}
-  className="mt-5 rounded-xl px-6 py-3 font-medium text-white"
-  style={{ backgroundColor: "#dc2626" }}
->
-  Retake Quiz
-</button>
+                onClick={retakeQuiz}
+                className="mt-5 rounded-xl px-6 py-3 font-medium text-white"
+                style={{ backgroundColor: "#dc2626" }}
+              >
+                Retake Quiz
+              </button>
             )}
           </div>
         )}
