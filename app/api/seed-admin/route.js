@@ -7,29 +7,43 @@ export async function GET() {
   try {
     await connectDB();
 
+    const hashedPassword = await bcrypt.hash("Admin@123", 10);
+
     const existingAdmin = await User.findOne({
       email: "admin@careerforge.com",
     });
 
     if (existingAdmin) {
+      await User.updateOne(
+        { email: "admin@careerforge.com" },
+        {
+          $set: {
+            passwordHash: hashedPassword,
+            role: "admin",
+            status: "active",
+          },
+          $unset: {
+            password: "",
+          },
+        }
+      );
+
       return NextResponse.json({
         success: true,
-        message: "Admin user already exists",
+        message: "Admin user already exists and was updated correctly",
         admin: {
           email: existingAdmin.email,
-          role: existingAdmin.role,
-          status: existingAdmin.status,
+          role: "admin",
+          status: "active",
         },
       });
     }
-
-    const hashedPassword = await bcrypt.hash("Admin@123", 10);
 
     const adminUser = await User.create({
       firstName: "Career",
       lastName: "Forge Admin",
       email: "admin@careerforge.com",
-      password: hashedPassword,
+      passwordHash: hashedPassword,
       role: "admin",
       status: "active",
     });
