@@ -1,5 +1,5 @@
 "use client";
-
+import ProtectedRoute from "@/app/components/ProtectedRoute";
 import { useEffect, useState } from "react";
 
 export default function AdminUsersPage() {
@@ -68,6 +68,7 @@ export default function AdminUsersPage() {
   };
 
   return (
+    <ProtectedRoute requiredRole="admin">
     <main className="min-h-screen bg-[var(--background)] px-6 py-10">
       <div className="mx-auto max-w-5xl rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
         <h1 className="text-4xl font-bold text-[var(--navy)]">
@@ -175,5 +176,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
     </main>
+    </ProtectedRoute>
   );
 }
