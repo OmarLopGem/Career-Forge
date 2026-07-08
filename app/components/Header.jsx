@@ -1,53 +1,90 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Header() {
-  const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("careerForgeUser");
+
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const isLoggedIn = !!user;
+  const isAdmin = user?.role === "admin";
+
+  const publicLinks = [
+    {
+      name: "Home",
+      href: "/",
+    },
+    {
+      name: "CV Assistant",
+      href: "/cv-assistant",
+    },
+    {
+      name: "Job Matches",
+      href: "/jobs",
+    },
+    {
+      name: "Practice",
+      href: "/quiz",
+    },
+  ];
+
+  const userLinks = [
+    {
+      name: "Calendar",
+      href: "/calendar",
+    },
+    {
+      name: "Profile",
+      href: "/profile",
+    },
+  ];
+
+  const adminLinks = [
+    {
+      name: "Admin Users",
+      href: "/admin/users",
+    },
+  ];
 
   const navLinks = [
-    {
-      name: 'Home',
-      href: '/',
-    },
-    {
-      name: 'CV Assistant',
-      href: '/cv-assistant',
-    },
-    {
-      name: 'Job Matches',
-      href: '/jobs',
-    },
-    {
-      name: 'Calendar',
-      href: '/calendar',
-    },
-    {
-      name: 'Practice',
-      href: '/quiz',
-    },
-    {
-      name: 'Profile',
-      href: '/profile',
-    },
-  ]
+    ...publicLinks,
+    ...(isLoggedIn ? userLinks : []),
+    ...(isAdmin ? adminLinks : []),
+  ];
 
   const isActiveLink = (href) => {
-    if (href === '/') {
-      return pathname === '/'
+    if (href === "/") {
+      return pathname === "/";
     }
 
-    return pathname.startsWith(href)
-  }
+    return pathname.startsWith(href);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("careerForgeUser");
+    localStorage.removeItem("careerForgeToken");
+    setUser(null);
+    setIsOpen(false);
+    router.push("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-md border-b border-border">
       <nav className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
         <div className="flex items-center justify-between">
-          
           {/* Logo */}
           <Link
             href="/"
@@ -68,7 +105,7 @@ export default function Header() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-2">
             {navLinks.map((link) => {
-              const isActive = isActiveLink(link.href)
+              const isActive = isActiveLink(link.href);
 
               return (
                 <Link
@@ -78,8 +115,8 @@ export default function Header() {
                     group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
                     ${
                       isActive
-                        ? 'text-brand-blue bg-blue-soft'
-                        : 'text-text-muted hover:text-brand-blue hover:bg-cyan-soft'
+                        ? "text-brand-blue bg-blue-soft"
+                        : "text-text-muted hover:text-brand-blue hover:bg-cyan-soft"
                     }
                   `}
                 >
@@ -91,21 +128,48 @@ export default function Header() {
                       transition-all duration-300 origin-center
                       ${
                         isActive
-                          ? 'opacity-100 scale-x-100'
-                          : 'opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100'
+                          ? "opacity-100 scale-x-100"
+                          : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100"
                       }
                     `}
                   />
                 </Link>
-              )
+              );
             })}
 
-            <Link
-              href="/resume"
-              className="ml-3 rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
-            >
-              Upload Resume
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/resume"
+                  className="ml-3 rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  Upload Resume
+                </Link>
+
+                <button
+                  onClick={handleLogout}
+                  className="rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-text-muted transition-all duration-300 hover:text-brand-blue hover:bg-cyan-soft"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="ml-3 rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-text-muted transition-all duration-300 hover:text-brand-blue hover:bg-cyan-soft"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  href="/register"
+                  className="rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Button */}
@@ -119,19 +183,19 @@ export default function Header() {
             <span
               className={`
                 h-0.5 w-6 bg-navy rounded-full transition-all duration-300
-                ${isOpen ? 'rotate-45 translate-y-2' : ''}
+                ${isOpen ? "rotate-45 translate-y-2" : ""}
               `}
             />
             <span
               className={`
                 h-0.5 w-6 bg-navy rounded-full transition-all duration-300
-                ${isOpen ? 'opacity-0' : 'opacity-100'}
+                ${isOpen ? "opacity-0" : "opacity-100"}
               `}
             />
             <span
               className={`
                 h-0.5 w-6 bg-navy rounded-full transition-all duration-300
-                ${isOpen ? '-rotate-45 -translate-y-2' : ''}
+                ${isOpen ? "-rotate-45 -translate-y-2" : ""}
               `}
             />
           </button>
@@ -141,12 +205,12 @@ export default function Header() {
         <div
           className={`
             lg:hidden overflow-hidden transition-all duration-300 ease-in-out
-            ${isOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'}
+            ${isOpen ? "max-h-[600px] opacity-100 mt-4" : "max-h-0 opacity-0"}
           `}
         >
           <div className="flex flex-col gap-2 pt-4 border-t border-border">
             {navLinks.map((link) => {
-              const isActive = isActiveLink(link.href)
+              const isActive = isActiveLink(link.href);
 
               return (
                 <Link
@@ -157,26 +221,55 @@ export default function Header() {
                     px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300
                     ${
                       isActive
-                        ? 'text-brand-blue bg-blue-soft'
-                        : 'text-text-muted hover:text-brand-blue hover:bg-cyan-soft'
+                        ? "text-brand-blue bg-blue-soft"
+                        : "text-text-muted hover:text-brand-blue hover:bg-cyan-soft"
                     }
                   `}
                 >
                   {link.name}
                 </Link>
-              )
+              );
             })}
 
-            <Link
-              href="/resume"
-              onClick={() => setIsOpen(false)}
-              className="mt-2 rounded-xl bg-brand-blue px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
-            >
-              Upload Resume
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/resume"
+                  onClick={() => setIsOpen(false)}
+                  className="mt-2 rounded-xl bg-brand-blue px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
+                >
+                  Upload Resume
+                </Link>
+
+                <button
+                  onClick={handleLogout}
+                  className="rounded-xl border border-border px-4 py-3 text-center text-sm font-semibold text-text-muted transition-all duration-300 hover:text-brand-blue hover:bg-cyan-soft"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="mt-2 rounded-xl border border-border px-4 py-3 text-center text-sm font-semibold text-text-muted transition-all duration-300 hover:text-brand-blue hover:bg-cyan-soft"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  href="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-xl bg-brand-blue px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
     </header>
-  )
+  );
 }
