@@ -5,7 +5,13 @@ import { serviceListAdminUsers } from '@/lib/server/admin/admin-users.service.js
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminUsersPage() {
+function parsePositiveInt(value) {
+  if (Array.isArray(value)) value = value[0]
+  const parsed = Number.parseInt(value, 10)
+  return Number.isFinite(parsed) && parsed >= 1 ? parsed : undefined
+}
+
+export default async function AdminUsersPage({ searchParams }) {
   const currentUser = await getCurrentUserFromRequest()
 
   if (!currentUser) {
@@ -16,7 +22,9 @@ export default async function AdminUsersPage() {
     redirect('/calendar')
   }
 
-  const { users } = await serviceListAdminUsers()
+  const resolvedSearchParams = await searchParams
+  const page = parsePositiveInt(resolvedSearchParams?.page)
+  const { users, pagination } = await serviceListAdminUsers({ page })
 
-  return <AdminUsersClient initialUsers={users} />
+  return <AdminUsersClient initialUsers={users} initialPagination={pagination} />
 }

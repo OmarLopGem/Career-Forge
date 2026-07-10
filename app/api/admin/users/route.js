@@ -8,9 +8,17 @@ import { toApiErrorResponse } from '@/lib/server/api-error.js'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+function parsePositiveInt(value) {
+  const parsed = Number.parseInt(value, 10)
+  return Number.isFinite(parsed) && parsed >= 1 ? parsed : undefined
+}
+
+export async function GET(request) {
   try {
-    const result = await serviceListAdminUsers()
+    const { searchParams } = new URL(request.url)
+    const page = parsePositiveInt(searchParams.get('page'))
+    const pageSize = parsePositiveInt(searchParams.get('pageSize'))
+    const result = await serviceListAdminUsers({ page, pageSize })
     return NextResponse.json(result)
   } catch (err) {
     const { body, status } = toApiErrorResponse(err)
