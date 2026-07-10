@@ -10,6 +10,8 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic'
 
+// CV Assistant is protected because the workflow reads and writes private resume
+// data across several steps.
 export default async function CVAssistantPage() {
   const user = await getCurrentUserFromRequest()
 

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import ToolPreviewCarousel from './components/ToolPreviewCarousel'
+import { getCurrentUserFromRequest } from '@/lib/server/auth/current-user.js'
 
 export const metadata = {
   title: 'Career Forge',
@@ -7,7 +8,10 @@ export const metadata = {
     'A career workspace that helps unemployed people improve their resume, find matched jobs, track applications, and prepare for interviews.',
 }
 
-export default function Home() {
+// The landing page introduces the platform as a connected workflow rather than
+// a set of isolated tools, so the cards and sections mirror the main product areas.
+export default async function Home() {
+  const currentUser = await getCurrentUserFromRequest()
   const tools = [
     {
       title: 'Resume Studio',
@@ -337,12 +341,21 @@ export default function Home() {
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              href="/register"
-              className="rounded-xl bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5"
-            >
-              Create Account
-            </Link>
+            {!currentUser ? (
+              <Link
+                href="/register"
+                className="rounded-xl bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5"
+              >
+                Create Account
+              </Link>
+            ) : (
+              <Link
+                href="/calendar"
+                className="rounded-xl bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5"
+              >
+                Open Calendar
+              </Link>
+            )}
 
             <Link
               href="/cv-assistant"

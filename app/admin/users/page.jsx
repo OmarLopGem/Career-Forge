@@ -5,6 +5,7 @@ import { serviceListAdminUsers } from '@/lib/server/admin/admin-users.service.js
 
 export const dynamic = 'force-dynamic'
 
+// This server page enforces admin-only access before any management UI renders.
 function parsePositiveInt(value) {
   if (Array.isArray(value)) value = value[0]
   const parsed = Number.parseInt(value, 10)

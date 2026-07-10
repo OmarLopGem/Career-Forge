@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+// The quiz page is intentionally self-contained for now: it loads question sets
+// by job type, tracks temporary answers in memory, and derives feedback locally.
 export default function QuizPage() {
   const jobTypes = [
     "Frontend Developer",

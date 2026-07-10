@@ -1,5 +1,7 @@
 'use client'
 
+// This summary card translates profile completeness into a resume-readiness
+// signal, making missing requirements obvious before generation is attempted.
 export default function ProfileCompletionCard({ completion }) {
   const score = Math.round(completion.score)
   const missingRequired = completion.missingRequiredFields

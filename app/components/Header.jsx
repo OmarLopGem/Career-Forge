@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { requestJsonWithoutBody } from "@/lib/job-tracker/client/api.js";
 
+// The header reads the server-provided user snapshot and derives the navigation
+// model locally so role-based links stay consistent across desktop and mobile.
 export default function Header({ currentUser = null }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -79,6 +81,7 @@ export default function Header({ currentUser = null }) {
       try {
         await requestJsonWithoutBody("/api/auth/logout", { method: "POST" });
       } catch {}
+      // Refresh after redirect so every server component re-evaluates the session.
       setIsOpen(false);
       router.push("/");
       router.refresh();

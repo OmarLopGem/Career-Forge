@@ -14,6 +14,8 @@ const STATUS_STYLES = {
   not_recommended: 'bg-orange-soft text-forge-orange',
 }
 
+// Template selection is constrained by the analysis results so users do not pick
+// a design that their current profile cannot support well.
 export default function TemplateGrid({ templates, onSelect, selectedKey }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

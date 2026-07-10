@@ -5,6 +5,8 @@ import { useCallback, useId, useRef, useState } from 'react'
 const ACCEPT = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 const MAX_SIZE = 5 * 1024 * 1024
 
+// This dropzone validates the raw upload before the import flow starts so the
+// parsing hooks only receive files that the backend knows how to process.
 export default function CVUploadDropzone({ onFile, disabled }) {
   const inputRef = useRef(null)
   const inputId = useId()

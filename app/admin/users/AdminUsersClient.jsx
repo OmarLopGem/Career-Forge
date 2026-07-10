@@ -18,6 +18,8 @@ const STATUS_LABELS = {
   blocked: 'Inactive',
 }
 
+// This client owns admin-side pagination, optimistic updates, and manual user
+// creation while the server page handles the access check.
 function StatusPill({ status }) {
   const label = STATUS_LABELS[status] ?? status
   const styles =

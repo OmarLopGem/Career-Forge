@@ -11,6 +11,8 @@ const SENIORITY_OPTIONS = [
   { value: 'executive', label: 'Executive' },
 ]
 
+// Target-role metadata is optional, but it gives the analysis and template steps
+// extra context about the kind of job the user is aiming for.
 export default function TargetRoleForm({ profile, onSave }) {
   const [target, setTarget] = useState(profile.target ?? {})
   const [saving, setSaving] = useState(false)

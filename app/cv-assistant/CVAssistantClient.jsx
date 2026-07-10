@@ -26,6 +26,8 @@ import AnalysisPanel from './components/AnalysisPanel.jsx'
 import TemplateGrid from './components/TemplateGrid.jsx'
 import DownloadPanel from './components/DownloadPanel.jsx'
 
+// This client is the coordinator for the full CV Assistant wizard: it composes
+// the data hooks, step logic, and child components into one guided workflow.
 export default function CVAssistantClient() {
   const router = useRouter()
 

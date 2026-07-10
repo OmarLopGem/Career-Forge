@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
 
+// The profile editor keeps a form-specific shape so the UI can work with free-form
+// skills text and repeatable experience rows before normalizing for the API.
 function createDefaultExperienceItem() {
   return {
     company: '',

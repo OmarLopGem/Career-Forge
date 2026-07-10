@@ -1,5 +1,7 @@
 'use client'
 
+// Profiles act like saved workspaces inside the CV assistant, so the list doubles
+// as both a selector and a quick completeness overview.
 export default function ProfileList({ profiles, selectedId, onSelect }) {
   if (profiles.length === 0) {
     return (

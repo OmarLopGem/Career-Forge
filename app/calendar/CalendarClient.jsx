@@ -14,6 +14,8 @@ import {
 
 const today = new Date()
 
+// The calendar UI keeps raw form state separate from persisted entities so
+// modals can support create/edit flows without mutating the server data first.
 function createEmptyEventForm(selectedDate, hasApplications) {
   return {
     id: null,
@@ -48,6 +50,20 @@ function createEmptyApplicationForm(jobListings) {
   }
 }
 
+function buildApplicationOptionLabel(application, jobInfo) {
+  const title = jobInfo?.title ?? application.jobSnapshot?.title ?? 'Untitled Role'
+  const company = jobInfo?.company ?? application.jobSnapshot?.company ?? 'Unknown Company'
+  const location = jobInfo?.location ?? application.jobSnapshot?.location ?? ''
+  const source = jobInfo?.source ?? application.jobSnapshot?.source ?? ''
+  const trailingDetail = location || (source && source !== 'Manual' ? source : '')
+
+  return [title, company, trailingDetail].filter(Boolean).join(' · ')
+}
+
+function buildListingOptionLabel(listing) {
+  return [listing.title, listing.company, listing.location].filter(Boolean).join(' · ')
+}
+
 export default function CalendarClient({
   initialApplications,
   initialEvents,
@@ -63,6 +79,12 @@ export default function CalendarClient({
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false)
   const [eventForm, setEventForm] = useState(createEmptyEventForm(formatDate(today), initialApplications.length > 0))
   const [applicationForm, setApplicationForm] = useState(createEmptyApplicationForm(initialJobListings))
+  const [eventApplicationQuery, setEventApplicationQuery] = useState('')
+  const [isEventApplicationDropdownOpen, setIsEventApplicationDropdownOpen] = useState(false)
+  const [isEventApplicationFilterActive, setIsEventApplicationFilterActive] = useState(false)
+  const [applicationListingQuery, setApplicationListingQuery] = useState('')
+  const [isApplicationListingDropdownOpen, setIsApplicationListingDropdownOpen] = useState(false)
+  const [isApplicationListingFilterActive, setIsApplicationListingFilterActive] = useState(false)
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -81,6 +103,58 @@ export default function CalendarClient({
       return !application.isArchived
     })
   }, [applications, activeView])
+
+  const activeEventApplicationOptions = useMemo(() => {
+    return applications
+      .filter((application) => !application.isArchived)
+      .map((application) => {
+        const jobInfo = application.jobListingId && listingMap.has(application.jobListingId)
+          ? listingMap.get(application.jobListingId)
+          : application.jobSnapshot
+
+        return {
+          application,
+          label: buildApplicationOptionLabel(application, jobInfo),
+        }
+      })
+  }, [applications, listingMap])
+
+  const filteredEventApplicationOptions = useMemo(() => {
+    // Only activate filtering once the user types; otherwise the combobox can show
+    // every option even after a selection was already made.
+    const query = isEventApplicationFilterActive
+      ? eventApplicationQuery.trim().toLowerCase()
+      : ''
+
+    if (!query) {
+      return activeEventApplicationOptions
+    }
+
+    return activeEventApplicationOptions.filter(({ label }) =>
+      label.toLowerCase().includes(query),
+    )
+  }, [activeEventApplicationOptions, eventApplicationQuery, isEventApplicationFilterActive])
+
+  const jobListingOptions = useMemo(() => {
+    return jobListings.map((listing) => ({
+      listing,
+      label: buildListingOptionLabel(listing),
+    }))
+  }, [jobListings])
+
+  const filteredJobListingOptions = useMemo(() => {
+    const query = isApplicationListingFilterActive
+      ? applicationListingQuery.trim().toLowerCase()
+      : ''
+
+    if (!query) {
+      return jobListingOptions
+    }
+
+    return jobListingOptions.filter(({ label }) =>
+      label.toLowerCase().includes(query),
+    )
+  }, [applicationListingQuery, isApplicationListingFilterActive, jobListingOptions])
 
   const visibleApplicationIds = useMemo(() => {
     return new Set(visibleApplications.map((application) => application._id))
@@ -124,6 +198,42 @@ export default function CalendarClient({
     setApplications(nextApplications)
   }
 
+  const syncSelectedApplicationQuery = (applicationId) => {
+    const selectedOption = activeEventApplicationOptions.find(
+      ({ application }) => application._id === applicationId,
+    )
+
+    setEventApplicationQuery(selectedOption?.label ?? '')
+    setIsEventApplicationFilterActive(false)
+  }
+
+  const selectEventApplication = (applicationId) => {
+    setEventForm((current) => ({
+      ...current,
+      jobApplicationId: applicationId,
+    }))
+    syncSelectedApplicationQuery(applicationId)
+    setIsEventApplicationDropdownOpen(false)
+  }
+
+  const syncSelectedJobListingQuery = (listingId) => {
+    const selectedOption = jobListingOptions.find(
+      ({ listing }) => listing._id === listingId,
+    )
+
+    setApplicationListingQuery(selectedOption?.label ?? '')
+    setIsApplicationListingFilterActive(false)
+  }
+
+  const selectApplicationListing = (listingId) => {
+    setApplicationForm((current) => ({
+      ...current,
+      jobListingId: listingId,
+    }))
+    syncSelectedJobListingQuery(listingId)
+    setIsApplicationListingDropdownOpen(false)
+  }
+
   const openCreateEventModal = () => {
     const firstActiveApplication = applications.find((application) => !application.isArchived)
 
@@ -132,11 +242,18 @@ export default function CalendarClient({
       jobApplicationId: firstActiveApplication?._id ?? '',
       scope: firstActiveApplication ? 'application' : 'personal',
     })
+    setEventApplicationQuery('')
+    setIsEventApplicationFilterActive(false)
+    setIsEventApplicationDropdownOpen(Boolean(firstActiveApplication))
     setError('')
     setIsEventModalOpen(true)
   }
 
   const openEditEventModal = (calendarEvent) => {
+    const selectedApplication = calendarEvent.jobApplicationId
+      ? getApplicationById(calendarEvent.jobApplicationId)
+      : null
+
     setEventForm({
       id: calendarEvent._id,
       scope: calendarEvent.scope,
@@ -149,12 +266,23 @@ export default function CalendarClient({
       notes: calendarEvent.notes ?? '',
       reminderEnabled: calendarEvent.reminderEnabled !== false,
     })
+    setEventApplicationQuery(
+      selectedApplication
+        ? buildApplicationOptionLabel(selectedApplication, getJobInfoFromApplication(selectedApplication))
+        : '',
+    )
+    setIsEventApplicationFilterActive(false)
+    setIsEventApplicationDropdownOpen(calendarEvent.scope === 'application')
     setError('')
     setIsEventModalOpen(true)
   }
 
   const openCreateApplicationModal = () => {
-    setApplicationForm(createEmptyApplicationForm(jobListings))
+    const nextForm = createEmptyApplicationForm(jobListings)
+
+    setApplicationForm(nextForm)
+    syncSelectedJobListingQuery(nextForm.jobListingId)
+    setIsApplicationListingDropdownOpen(false)
     setError('')
     setIsApplicationModalOpen(true)
   }
@@ -165,6 +293,7 @@ export default function CalendarClient({
 
     startTransition(async () => {
       try {
+        // Create and update share the same modal, so the request shape is normalized here.
         const method = eventForm.id ? 'PATCH' : 'POST'
         const url = eventForm.id
           ? `/api/calendar/events/${eventForm.id}`
@@ -218,6 +347,8 @@ export default function CalendarClient({
 
     startTransition(async () => {
       try {
+        // Listing-backed and manual applications end up in the same API, but the
+        // payload differs depending on whether a shared listing was chosen.
         const payload = applicationForm.mode === 'listing'
           ? {
               jobListingId: applicationForm.jobListingId,
@@ -652,13 +783,27 @@ export default function CalendarClient({
                 <span className="text-sm font-semibold text-navy">Scope</span>
                 <select
                   value={eventForm.scope}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const nextScope = event.target.value
+                    const fallbackApplicationId = activeEventApplicationOptions[0]?.application._id ?? ''
+                    const nextApplicationId = eventForm.jobApplicationId || fallbackApplicationId
+
                     setEventForm((current) => ({
                       ...current,
-                      scope: event.target.value,
-                      jobApplicationId: event.target.value === 'personal' ? '' : current.jobApplicationId,
+                      scope: nextScope,
+                      jobApplicationId: nextScope === 'personal' ? '' : nextApplicationId,
                     }))
-                  }
+
+                    if (nextScope === 'personal') {
+                      setEventApplicationQuery('')
+                      setIsEventApplicationFilterActive(false)
+                      setIsEventApplicationDropdownOpen(false)
+                      return
+                    }
+
+                    syncSelectedApplicationQuery(nextApplicationId)
+                    setIsEventApplicationDropdownOpen(true)
+                  }}
                   className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
                 >
                   <option value="application">Job Application</option>
@@ -669,24 +814,84 @@ export default function CalendarClient({
               {eventForm.scope === 'application' ? (
                 <label className="block">
                   <span className="text-sm font-semibold text-navy">Job Application</span>
-                  <select
-                    value={eventForm.jobApplicationId}
-                    onChange={(event) =>
-                      setEventForm((current) => ({ ...current, jobApplicationId: event.target.value }))
-                    }
-                    className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
-                  >
-                    {applications
-                      .filter((application) => !application.isArchived)
-                      .map((application) => {
-                        const jobInfo = getJobInfoFromApplication(application)
-                        return (
-                          <option key={application._id} value={application._id}>
-                            {jobInfo?.title} · {jobInfo?.company}
-                          </option>
-                        )
-                      })}
-                  </select>
+                  <div className="relative mt-2">
+                    <div className="flex items-center rounded-xl border border-border bg-background pr-2 focus-within:border-brand-blue">
+                      <input
+                        type="text"
+                        role="combobox"
+                        value={eventApplicationQuery}
+                        onFocus={() => setIsEventApplicationDropdownOpen(true)}
+                        onChange={(event) => {
+                          setEventApplicationQuery(event.target.value)
+                          setIsEventApplicationFilterActive(true)
+                          setIsEventApplicationDropdownOpen(true)
+                          setEventForm((current) => ({
+                            ...current,
+                            jobApplicationId: '',
+                          }))
+                        }}
+                        onBlur={() => {
+                          window.setTimeout(() => {
+                            setIsEventApplicationDropdownOpen(false)
+                          }, 120)
+                        }}
+                        placeholder="Type to filter applications..."
+                        aria-label="Job Application"
+                        aria-autocomplete="list"
+                        aria-haspopup="listbox"
+                        aria-expanded={isEventApplicationDropdownOpen}
+                        aria-controls="event-application-options"
+                        autoComplete="off"
+                        className="w-full rounded-xl bg-transparent px-4 py-3 text-sm text-text-main outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsEventApplicationDropdownOpen((current) => !current)}
+                        className="rounded-lg px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:text-brand-blue"
+                        aria-label="Toggle job application options"
+                      >
+                        {isEventApplicationDropdownOpen ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+
+                    {isEventApplicationDropdownOpen ? (
+                      <div
+                        id="event-application-options"
+                        role="listbox"
+                        className="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-2xl border border-border bg-surface p-2 shadow-lg"
+                      >
+                        {filteredEventApplicationOptions.length > 0 ? (
+                          filteredEventApplicationOptions.map(({ application, label }) => (
+                            <button
+                              key={application._id}
+                              type="button"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => selectEventApplication(application._id)}
+                              className={`flex w-full items-start justify-between gap-3 rounded-xl px-3 py-3 text-left text-sm transition-colors ${
+                                eventForm.jobApplicationId === application._id
+                                  ? 'bg-blue-soft text-brand-blue'
+                                  : 'text-text-main hover:bg-background'
+                              }`}
+                            >
+                              <span>{label}</span>
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${jobStatusStyles[application.status]}`}
+                              >
+                                {jobStatusLabels[application.status]}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-3 py-3 text-sm text-text-muted">
+                            No applications match this filter.
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-xs text-text-muted">
+                    Start typing to filter by title, company, or location.
+                  </p>
                 </label>
               ) : null}
             </div>
@@ -782,7 +987,19 @@ export default function CalendarClient({
                 <button
                   key={mode}
                   type="button"
-                  onClick={() => setApplicationForm((current) => ({ ...current, mode }))}
+                  onClick={() => {
+                    setApplicationForm((current) => ({ ...current, mode }))
+
+                    if (mode === 'listing') {
+                      syncSelectedJobListingQuery(applicationForm.jobListingId)
+                      setIsApplicationListingDropdownOpen(jobListings.length > 0)
+                      return
+                    }
+
+                    setApplicationListingQuery('')
+                    setIsApplicationListingFilterActive(false)
+                    setIsApplicationListingDropdownOpen(false)
+                  }}
                   className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-300 ${
                     applicationForm.mode === mode
                       ? 'bg-brand-blue text-white'
@@ -797,19 +1014,82 @@ export default function CalendarClient({
             {applicationForm.mode === 'listing' ? (
               <label className="block">
                 <span className="text-sm font-semibold text-navy">Job Listing</span>
-                <select
-                  value={applicationForm.jobListingId}
-                  onChange={(event) =>
-                    setApplicationForm((current) => ({ ...current, jobListingId: event.target.value }))
-                  }
-                  className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
-                >
-                  {jobListings.map((listing) => (
-                    <option key={listing._id} value={listing._id}>
-                      {listing.title} · {listing.company}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative mt-2">
+                  <div className="flex items-center rounded-xl border border-border bg-background pr-2 focus-within:border-brand-blue">
+                    <input
+                      type="text"
+                      role="combobox"
+                      value={applicationListingQuery}
+                      onFocus={() => setIsApplicationListingDropdownOpen(true)}
+                      onChange={(event) => {
+                        setApplicationListingQuery(event.target.value)
+                        setIsApplicationListingFilterActive(true)
+                        setIsApplicationListingDropdownOpen(true)
+                        setApplicationForm((current) => ({
+                          ...current,
+                          jobListingId: '',
+                        }))
+                      }}
+                      onBlur={() => {
+                        window.setTimeout(() => {
+                          setIsApplicationListingDropdownOpen(false)
+                        }, 120)
+                      }}
+                      placeholder="Type to filter job listings..."
+                      aria-label="Job Listing"
+                      aria-autocomplete="list"
+                      aria-haspopup="listbox"
+                      aria-expanded={isApplicationListingDropdownOpen}
+                      aria-controls="application-listing-options"
+                      autoComplete="off"
+                      className="w-full rounded-xl bg-transparent px-4 py-3 text-sm text-text-main outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsApplicationListingDropdownOpen((current) => !current)}
+                      className="rounded-lg px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:text-brand-blue"
+                      aria-label="Toggle job listing options"
+                    >
+                      {isApplicationListingDropdownOpen ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+
+                  {isApplicationListingDropdownOpen ? (
+                    <div
+                      id="application-listing-options"
+                      role="listbox"
+                      className="absolute z-20 mt-2 max-h-60 w-full overflow-auto rounded-2xl border border-border bg-surface p-2 shadow-lg"
+                    >
+                      {filteredJobListingOptions.length > 0 ? (
+                        filteredJobListingOptions.map(({ listing, label }) => (
+                          <button
+                            key={listing._id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => selectApplicationListing(listing._id)}
+                            className={`flex w-full items-start justify-between gap-3 rounded-xl px-3 py-3 text-left text-sm transition-colors ${
+                              applicationForm.jobListingId === listing._id
+                                ? 'bg-blue-soft text-brand-blue'
+                                : 'text-text-main hover:bg-background'
+                            }`}
+                          >
+                            <span>{label}</span>
+                            <span className="shrink-0 rounded-full bg-background px-2 py-1 text-[10px] font-semibold text-text-muted">
+                              {listing.source}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-3 text-sm text-text-muted">
+                          No job listings match this filter.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-xs text-text-muted">
+                  Start typing to filter by title, company, or location.
+                </p>
               </label>
             ) : (
               <div className="grid gap-5 md:grid-cols-2">
@@ -840,16 +1120,6 @@ export default function CalendarClient({
                     setApplicationForm((current) => ({
                       ...current,
                       jobSnapshot: { ...current.jobSnapshot, location: event.target.value },
-                    }))
-                  }
-                />
-                <FormField
-                  label="Source"
-                  value={applicationForm.jobSnapshot.source}
-                  onChange={(event) =>
-                    setApplicationForm((current) => ({
-                      ...current,
-                      jobSnapshot: { ...current.jobSnapshot, source: event.target.value },
                     }))
                   }
                 />

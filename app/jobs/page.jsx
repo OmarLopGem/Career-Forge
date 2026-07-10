@@ -8,6 +8,8 @@ import {
 
 export const dynamic = 'force-dynamic'
 
+// Jobs needs both the shared catalog and the user's tracked applications so the
+// UI can show which listings are already being followed.
 export default async function JobsPage() {
   const user = await getCurrentUserFromRequest()
 

@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+// The footer mirrors the platform information architecture so users always have
+// a secondary navigation path into the main tools and future sections.
 export default function Footer() {
   const year = new Date().getFullYear()
 

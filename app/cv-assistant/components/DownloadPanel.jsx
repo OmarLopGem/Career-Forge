@@ -1,5 +1,7 @@
 'use client'
 
+// The final step is intentionally simple: choose a compatible template and ask
+// the server to generate a one-off PDF without persisting the file itself.
 export default function DownloadPanel({ template, generating, error, onGenerate, canGenerate }) {
   return (
     <div className="rounded-3xl border border-border bg-surface p-6 md:p-8 shadow-sm">

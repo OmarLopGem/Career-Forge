@@ -9,6 +9,8 @@ import {
 
 export const dynamic = 'force-dynamic'
 
+// Load every calendar dependency on the server first so the client can start
+// with a complete tracker state instead of stitching together multiple fetches.
 export default async function CalendarPage() {
   const user = await getCurrentUserFromRequest()
 

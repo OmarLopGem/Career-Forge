@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { requestJsonWithoutBody } from '@/lib/job-tracker/client/api.js'
 
+// This standalone logout action is useful in places where the full header is not
+// rendered, but it still follows the same server-session invalidation flow.
 export default function LogoutButton({ className }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()

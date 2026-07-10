@@ -3,6 +3,8 @@ import { getCurrentUserFromRequest } from '@/lib/server/auth/current-user.js'
 
 export const dynamic = 'force-dynamic'
 
+// Progress is still a lightweight placeholder, but it is already treated as a
+// private area so the future module can expand without changing access rules.
 export default async function ProgressPage() {
   const user = await getCurrentUserFromRequest()
 

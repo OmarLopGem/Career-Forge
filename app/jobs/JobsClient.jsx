@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
 import { jobStatusLabels, jobStatusStyles } from '@/lib/job-tracker/client/constants.js'
 
+// This page displays the shared catalog, but the tracking action always creates
+// a private application record tied to the current user.
 export default function JobsClient({ initialJobListings, initialApplications }) {
   const [jobListings] = useState(initialJobListings)
   const [applications, setApplications] = useState(initialApplications)
@@ -12,6 +14,7 @@ export default function JobsClient({ initialJobListings, initialApplications }) 
   const [isPending, startTransition] = useTransition()
 
   const trackedByListingId = useMemo(() => {
+    // A map keeps repeated "already tracked?" lookups O(1) while rendering cards.
     return new Map(
       applications
         .filter((application) => application.jobListingId)
@@ -24,6 +27,7 @@ export default function JobsClient({ initialJobListings, initialApplications }) 
 
     startTransition(async () => {
       try {
+        // Tracking a job is just a specialized job-application creation flow.
         const { application } = await requestJson('/api/job-applications', {
           method: 'POST',
           body: JSON.stringify({

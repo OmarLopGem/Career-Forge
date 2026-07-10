@@ -3,6 +3,8 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 
+// The carousel gives the homepage a quick tour of the product modules without
+// forcing the user to navigate away before understanding the platform.
 export default function ToolPreviewCarousel() {
   const carouselRef = useRef(null)
   const [activeIndex, setActiveIndex] = useState(0)

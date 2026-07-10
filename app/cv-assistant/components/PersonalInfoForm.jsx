@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 
+// Personal info is edited as a focused sub-form so profile refreshes can happen
+// independently from the rest of the CV assistant state.
 export default function PersonalInfoForm({ profile, onSave }) {
   const [info, setInfo] = useState(profile.personalInfo)
   const [saving, setSaving] = useState(false)

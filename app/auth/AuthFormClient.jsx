@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
 
+// Client-side validation is only for fast feedback; the server still enforces
+// the real auth rules and session creation.
 const copyByMode = {
   login: {
     badge: 'Secure Login',
@@ -77,6 +79,7 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar' }) {
 
     startTransition(async () => {
       try {
+        // Keep login and register in one client while only changing the payload shape.
         const payload = mode === 'register'
           ? {
               firstName: form.firstName.trim(),

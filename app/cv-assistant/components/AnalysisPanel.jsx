@@ -1,5 +1,7 @@
 'use client'
 
+// AnalysisPanel is the readout for the AI step: before analysis it acts like a
+// call-to-action, and after analysis it turns into a structured feedback report.
 export default function AnalysisPanel({ analysis, loading, error, onRun, canRun }) {
   if (loading) {
     return (

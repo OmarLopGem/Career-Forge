@@ -2,6 +2,8 @@
 
 import { CV_STEPS } from '@/lib/cv-assistant/ui-steps.js'
 
+// The stepper visualizes progress and only allows jumping to steps that are
+// already complete or currently active, which keeps the wizard deterministic.
 export default function CVAssistantStepper({ current, onJump, completed = [] }) {
   return (
     <ol className="grid grid-cols-2 sm:grid-cols-5 gap-3">
