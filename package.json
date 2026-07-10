@@ -12,6 +12,8 @@
     "seed:job-listings": "node scripts/seed-job-listings.mjs"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "firebase": "^12.14.0",
     "mongodb": "^7.2.0",
     "mongoose": "^9.7.1",
     "next": "16.2.7",
