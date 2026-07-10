@@ -18,7 +18,8 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const page = parsePositiveInt(searchParams.get('page'))
     const pageSize = parsePositiveInt(searchParams.get('pageSize'))
-    const result = await serviceListAdminUsers({ page, pageSize })
+    const q = searchParams.get('q') ?? undefined
+    const result = await serviceListAdminUsers({ page, pageSize, query: q })
     return NextResponse.json(result)
   } catch (err) {
     const { body, status } = toApiErrorResponse(err)

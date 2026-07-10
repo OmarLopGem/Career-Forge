@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
 
@@ -20,6 +20,24 @@ const STATUS_LABELS = {
 
 // This client owns admin-side pagination, optimistic updates, and manual user
 // creation while the server page handles the access check.
+function SearchIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  )
+}
+
 function StatusPill({ status }) {
   const label = STATUS_LABELS[status] ?? status
   const styles =
@@ -56,26 +74,128 @@ function PageIndicator({ page, totalPages }) {
   )
 }
 
-function ResultsSummary({ total, page, pageSize }) {
+function ResultsSummary({ total, page, pageSize, query }) {
   if (total === 0) {
-    return (
-      <p className="text-sm text-text-muted">No users to display.</p>
-    )
+    if (query) {
+      return (
+        <p className="text-sm text-text-muted">
+          No users match{' '}
+          <span className="font-semibold text-navy">&ldquo;{query}&rdquo;</span>.
+        </p>
+      )
+    }
+
+    return <p className="text-sm text-text-muted">No users to display.</p>
   }
 
   const start = (page - 1) * pageSize + 1
   const end = Math.min(total, page * pageSize)
+  const noun = total === 1 ? 'user' : 'users'
+
+  if (query) {
+    return (
+      <p className="text-sm text-text-muted">
+        Showing{' '}
+        <span className="font-semibold text-navy">{start}</span>
+        –<span className="font-semibold text-navy">{end}</span> of{' '}
+        <span className="font-semibold text-navy">{total}</span> {noun} for{' '}
+        <span className="font-semibold text-navy">
+          &ldquo;{query}&rdquo;
+        </span>
+      </p>
+    )
+  }
 
   return (
     <p className="text-sm text-text-muted">
       Showing <span className="font-semibold text-navy">{start}</span>
       –<span className="font-semibold text-navy">{end}</span> of{' '}
-      <span className="font-semibold text-navy">{total}</span> users
+      <span className="font-semibold text-navy">{total}</span> {noun}
     </p>
   )
 }
 
-export default function AdminUsersClient({ initialUsers, initialPagination }) {
+function SearchBar({
+  value,
+  onChange,
+  onClear,
+  onSubmit,
+  isPending,
+}) {
+  return (
+    <form
+      role="search"
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSubmit()
+      }}
+      className="relative w-full md:w-80"
+    >
+      <label htmlFor="admin-users-search" className="sr-only">
+        Search users by name or email
+      </label>
+
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
+        <SearchIcon />
+      </span>
+
+      <input
+        id="admin-users-search"
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && value) {
+            event.preventDefault()
+            onClear()
+          }
+        }}
+        placeholder="Search by name or email"
+        autoComplete="off"
+        spellCheck="false"
+        className="w-full rounded-xl border border-border bg-white py-2.5 pl-9 pr-9 text-sm text-navy outline-none transition focus:border-brand-blue"
+      />
+
+      {value ? (
+        <button
+          type="button"
+          onClick={onClear}
+          aria-label="Clear search"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-text-muted transition hover:bg-blue-soft hover:text-navy"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+            aria-hidden="true"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      ) : null}
+
+      {isPending ? (
+        <span
+          aria-hidden="true"
+          className="absolute right-9 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wider text-text-muted"
+        >
+          …
+        </span>
+      ) : null}
+    </form>
+  )
+}
+
+export default function AdminUsersClient({
+  initialUsers,
+  initialPagination,
+  initialQuery = '',
+}) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [users, setUsers] = useState(initialUsers)
@@ -87,6 +207,11 @@ export default function AdminUsersClient({ initialUsers, initialPagination }) {
   const [loading, setLoading] = useState(false)
   const [pendingStatusIds, setPendingStatusIds] = useState(() => new Set())
   const [formData, setFormData] = useState(defaultForm)
+  const [searchInput, setSearchInput] = useState(initialQuery)
+  const [query, setQuery] = useState(initialQuery)
+  const queryRef = useRef(query)
+  const debounceRef = useRef(null)
+  const requestSeqRef = useRef(0)
   const [, startTransition] = useTransition()
 
   const page = pagination.page
@@ -95,16 +220,37 @@ export default function AdminUsersClient({ initialUsers, initialPagination }) {
   const canGoPrev = hasUsers && page > 1
   const canGoNext = hasUsers && page < totalPages
 
-  const syncPageToUrl = useCallback(
-    (nextPage) => {
+  const buildApiUrl = useCallback(
+    ({ targetPage, targetQuery }) => {
+      const params = new URLSearchParams()
+      params.set('page', String(targetPage ?? page))
+      params.set('pageSize', String(pagination.pageSize))
+      const nextQuery =
+        targetQuery !== undefined ? targetQuery : query
+      if (nextQuery.trim()) {
+        params.set('q', nextQuery.trim())
+      }
+      return `/api/admin/users?${params.toString()}`
+    },
+    [page, pagination.pageSize, query],
+  )
+
+  const syncStateToUrl = useCallback(
+    (nextPage, nextQuery) => {
       const params = new URLSearchParams(searchParams.toString())
       if (nextPage <= 1) {
         params.delete('page')
       } else {
         params.set('page', String(nextPage))
       }
-      const query = params.toString()
-      const url = query ? `/admin/users?${query}` : '/admin/users'
+      const trimmedQuery = (nextQuery ?? '').trim()
+      if (trimmedQuery) {
+        params.set('q', trimmedQuery)
+      } else {
+        params.delete('q')
+      }
+      const search = params.toString()
+      const url = search ? `/admin/users?${search}` : '/admin/users'
       startTransition(() => {
         router.replace(url, { scroll: false })
       })
@@ -113,34 +259,85 @@ export default function AdminUsersClient({ initialUsers, initialPagination }) {
   )
 
   const loadUsers = useCallback(
-    async (targetPage = page) => {
-      const data = await requestJson(
-        `/api/admin/users?page=${targetPage}&pageSize=${pagination.pageSize}`,
-      )
-      setUsers(data.users ?? [])
-      setPagination(
-        data.pagination ?? {
-          page: targetPage,
-          pageSize: pagination.pageSize,
-          total: data.users?.length ?? 0,
-          totalPages: 1,
-        },
-      )
+    async (targetPage = page, targetQuery = query) => {
+      const seq = ++requestSeqRef.current
+      setError('')
+      try {
+        const data = await requestJson(
+          buildApiUrl({ targetPage, targetQuery }),
+        )
+        if (seq !== requestSeqRef.current) return
+        setUsers(data.users ?? [])
+        setPagination(
+          data.pagination ?? {
+            page: targetPage,
+            pageSize: pagination.pageSize,
+            total: data.users?.length ?? 0,
+            totalPages: 1,
+          },
+        )
+      } catch (err) {
+        if (seq !== requestSeqRef.current) return
+        setError(err instanceof Error ? err.message : 'Failed to load users.')
+      }
     },
-    [page, pagination.pageSize],
+    [buildApiUrl, page, pagination.pageSize, query],
   )
+
+  const applyQueryChange = useCallback(
+    (nextValue) => {
+      const trimmed = String(nextValue ?? '').trim()
+      setSearchInput(trimmed)
+      const changed = trimmed !== queryRef.current
+      queryRef.current = trimmed
+      if (!changed) return
+      setQuery(trimmed)
+      syncStateToUrl(1, trimmed)
+      loadUsers(1, trimmed)
+    },
+    [loadUsers, syncStateToUrl],
+  )
+
+  const handleSearchChange = useCallback(
+    (nextValue) => {
+      setSearchInput(nextValue)
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      debounceRef.current = setTimeout(() => {
+        applyQueryChange(nextValue)
+      }, 300)
+    },
+    [applyQueryChange],
+  )
+
+  const handleSearchClear = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    applyQueryChange('')
+  }, [applyQueryChange])
+
+  const handleSearchSubmit = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    applyQueryChange(searchInput)
+  }, [applyQueryChange, searchInput])
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    queryRef.current = query
+  }, [query])
 
   const goToPage = useCallback(
     (nextPage) => {
       const clamped = Math.max(1, Math.min(totalPages || 1, nextPage))
       if (clamped === page) return
-      syncPageToUrl(clamped)
+      syncStateToUrl(clamped, query)
       setPagination((current) => ({ ...current, page: clamped }))
-      loadUsers(clamped).catch((err) => {
-        setError(err instanceof Error ? err.message : 'Failed to load users.')
-      })
+      loadUsers(clamped, query)
     },
-    [loadUsers, page, syncPageToUrl, totalPages],
+    [loadUsers, page, query, syncStateToUrl, totalPages],
   )
 
   const handleChange = (event) => {
@@ -166,9 +363,13 @@ export default function AdminUsersClient({ initialUsers, initialPagination }) {
 
       setMessage('User created successfully.')
       setFormData(defaultForm)
-      syncPageToUrl(1)
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      setSearchInput('')
+      queryRef.current = ''
+      setQuery('')
+      syncStateToUrl(1, '')
       setPagination((current) => ({ ...current, page: 1 }))
-      await loadUsers(1)
+      await loadUsers(1, '')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
@@ -289,8 +490,39 @@ export default function AdminUsersClient({ initialUsers, initialPagination }) {
     [pendingStatusIds, toggleUserStatus],
   )
 
+  const isSearching = query.trim().length > 0
+  const trimSearch = searchInput.trim()
+
   const tableBody = useMemo(() => {
     if (users.length === 0) {
+      if (isSearching) {
+        return (
+          <tr>
+            <td
+              colSpan={5}
+              className="p-8 text-center text-sm text-text-muted"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <p>
+                  No users match{' '}
+                  <span className="font-semibold text-navy">
+                    &ldquo;{query}&rdquo;
+                  </span>
+                  .
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSearchClear}
+                  className="text-xs font-semibold uppercase tracking-wider text-brand-blue transition hover:text-brand-blue-hover"
+                >
+                  Clear search
+                </button>
+              </div>
+            </td>
+          </tr>
+        )
+      }
+
       return (
         <tr>
           <td
@@ -316,7 +548,7 @@ export default function AdminUsersClient({ initialUsers, initialPagination }) {
         <td className="p-3">{renderAction(user)}</td>
       </tr>
     ))
-  }, [users, renderAction])
+  }, [handleSearchClear, isSearching, query, renderAction, users])
 
   return (
     <main className="min-h-screen bg-background px-6 py-10">
@@ -393,14 +625,23 @@ export default function AdminUsersClient({ initialUsers, initialPagination }) {
 
         <div className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-navy">
-              Existing Users
-            </h2>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl font-bold text-navy">Existing Users</h2>
 
-            <ResultsSummary
-              total={pagination.total}
-              page={page}
-              pageSize={pagination.pageSize}
+              <ResultsSummary
+                total={pagination.total}
+                page={page}
+                pageSize={pagination.pageSize}
+                query={isSearching ? query : ''}
+              />
+            </div>
+
+            <SearchBar
+              value={searchInput}
+              onChange={handleSearchChange}
+              onClear={handleSearchClear}
+              onSubmit={handleSearchSubmit}
+              isPending={trimSearch !== query}
             />
           </div>
 
