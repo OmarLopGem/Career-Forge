@@ -24,7 +24,17 @@ export default async function AdminUsersPage({ searchParams }) {
 
   const resolvedSearchParams = await searchParams
   const page = parsePositiveInt(resolvedSearchParams?.page)
-  const { users, pagination } = await serviceListAdminUsers({ page })
+  const q = resolvedSearchParams?.q
+  const { users, pagination } = await serviceListAdminUsers({
+    page,
+    query: typeof q === 'string' ? q : undefined,
+  })
 
-  return <AdminUsersClient initialUsers={users} initialPagination={pagination} />
+  return (
+    <AdminUsersClient
+      initialUsers={users}
+      initialPagination={pagination}
+      initialQuery={typeof q === 'string' ? q : ''}
+    />
+  )
 }
