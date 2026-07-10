@@ -1,6 +1,8 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  /* config options here */
-};
+import { loadProjectEnv } from './lib/server/load-env-file.mjs'
 
-export default nextConfig;
+loadProjectEnv()
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {}
+
+export default nextConfig

@@ -1,26 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { requestJsonWithoutBody } from "@/lib/job-tracker/client/api.js";
 
-export default function Header() {
+export default function Header({ currentUser = null }) {
   const pathname = usePathname();
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("careerForgeUser");
-
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
-
-  const isLoggedIn = !!user;
-  const isAdmin = user?.role === "admin";
+  const isLoggedIn = !!currentUser;
+  const isAdmin = currentUser?.role === "admin";
 
   const publicLinks = [
     {
@@ -53,6 +46,10 @@ export default function Header() {
       name: "Profile",
       href: "/profile",
     },
+    {
+      name: "Progress",
+      href: "/progress",
+    },
   ];
 
   const adminLinks = [
@@ -64,6 +61,7 @@ export default function Header() {
 
   const navLinks = [
     ...publicLinks,
+    ...(isLoggedIn ? authenticatedLinks : []),
     ...(isLoggedIn ? userLinks : []),
     ...(isAdmin ? adminLinks : []),
   ];
@@ -77,11 +75,14 @@ export default function Header() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("careerForgeUser");
-    localStorage.removeItem("careerForgeToken");
-    setUser(null);
-    setIsOpen(false);
-    router.push("/");
+    startTransition(async () => {
+      try {
+        await requestJsonWithoutBody("/api/auth/logout", { method: "POST" });
+      } catch {}
+      setIsOpen(false);
+      router.push("/");
+      router.refresh();
+    });
   };
 
   return (
@@ -151,9 +152,10 @@ export default function Header() {
 
                 <button
                   onClick={handleLogout}
+                  disabled={isPending}
                   className="rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-text-muted transition-all duration-300 hover:text-brand-blue hover:bg-cyan-soft"
                 >
-                  Logout
+                  {isPending ? "Signing out..." : "Logout"}
                 </button>
               </>
             ) : (
@@ -246,9 +248,10 @@ export default function Header() {
 
                 <button
                   onClick={handleLogout}
+                  disabled={isPending}
                   className="rounded-xl border border-border px-4 py-3 text-center text-sm font-semibold text-text-muted transition-all duration-300 hover:text-brand-blue hover:bg-cyan-soft"
                 >
-                  Logout
+                  {isPending ? "Signing out..." : "Logout"}
                 </button>
               </>
             ) : (

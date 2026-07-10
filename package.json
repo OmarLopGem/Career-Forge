@@ -1,6 +1,7 @@
 {
   "name": "carrer-forge",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,13 +10,12 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed:job-listings": "node scripts/seed-job-listings.mjs"
+    "seed:job-listings": "node scripts/seed-job-listings.mjs",
+    "seed:admin": "node scripts/seed-admin.mjs",
+    "seed:quiz": "node scripts/seed-quiz.mjs"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "firebase": "^12.14.0",
     "mongodb": "^7.2.0",
-    "mongoose": "^9.7.1",
     "next": "16.2.7",
     "react": "19.2.4",
     "react-dom": "19.2.4"

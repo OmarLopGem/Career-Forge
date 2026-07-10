@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import {
-  serviceCreateAdminUser,
-  serviceListAdminUsers,
-} from '@/lib/server/admin/admin-users.service.js'
+  serviceGetMyProfile,
+  serviceUpdateMyProfile,
+} from '@/lib/server/profile/user-profile.service.js'
 import { toApiErrorResponse } from '@/lib/server/api-error.js'
 
 export const runtime = 'nodejs'
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const result = await serviceListAdminUsers()
+    const result = await serviceGetMyProfile()
     return NextResponse.json(result)
   } catch (err) {
     const { body, status } = toApiErrorResponse(err)
@@ -18,11 +18,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request) {
+export async function PATCH(request) {
   try {
     const body = await request.json()
-    const result = await serviceCreateAdminUser(body)
-    return NextResponse.json(result, { status: 201 })
+    const result = await serviceUpdateMyProfile(body)
+    return NextResponse.json(result)
   } catch (err) {
     const { body, status } = toApiErrorResponse(err)
     return NextResponse.json(body, { status })

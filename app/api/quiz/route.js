@@ -1,30 +1,19 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
-import QuizQuestion from "@/app/models/QuizQuestion";
+import { NextResponse } from 'next/server'
+import { serviceListQuizQuestions } from '@/lib/server/quiz/quiz.service.js'
+import { toApiErrorResponse } from '@/lib/server/api-error.js'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
   try {
-    await connectDB();
+    const { searchParams } = new URL(request.url)
+    const jobType = searchParams.get('jobType')
+    const result = await serviceListQuizQuestions(jobType)
 
-    const { searchParams } = new URL(request.url);
-    const jobType = searchParams.get("jobType");
-
-    const filter = jobType ? { jobType } : {};
-
-    const questions = await QuizQuestion.find(filter);
-
-    return NextResponse.json({
-      success: true,
-      count: questions.length,
-      questions,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message,
-      },
-      { status: 500 }
-    );
+    return NextResponse.json(result)
+  } catch (err) {
+    const { body, status } = toApiErrorResponse(err)
+    return NextResponse.json(body, { status })
   }
 }

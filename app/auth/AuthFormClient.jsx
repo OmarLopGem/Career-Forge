@@ -52,9 +52,26 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar' }) {
   const handleSubmit = (event) => {
     event.preventDefault()
     setError('')
+    const email = form.email.trim()
+    const password = form.password
+
+    if (mode === 'register') {
+      if (!form.firstName.trim() || !form.lastName.trim() || !email || !password) {
+        setError('Please complete all required fields before continuing.')
+        return
+      }
+    } else if (!email || !password) {
+      setError('Please enter your email and password.')
+      return
+    }
 
     if (mode === 'register' && form.password !== form.confirmPassword) {
       setError('Passwords do not match.')
+      return
+    }
+
+    if (password && password.length < 8) {
+      setError('Password must contain at least 8 characters.')
       return
     }
 
@@ -62,14 +79,14 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar' }) {
       try {
         const payload = mode === 'register'
           ? {
-              firstName: form.firstName,
-              lastName: form.lastName,
-              email: form.email,
-              password: form.password,
+              firstName: form.firstName.trim(),
+              lastName: form.lastName.trim(),
+              email,
+              password,
             }
           : {
-              email: form.email,
-              password: form.password,
+              email,
+              password,
             }
 
         await requestJson(`/api/auth/${mode}`, {
@@ -212,7 +229,6 @@ function Field({ id, label, type = 'text', value, onChange }) {
         value={value}
         onChange={onChange}
         className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none transition-colors focus:border-brand-blue"
-        required
       />
     </label>
   )
