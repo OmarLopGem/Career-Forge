@@ -14,7 +14,13 @@ export default async function ProfilePage() {
     redirect('/login?redirectTo=/profile')
   }
 
-  const { profile } = await serviceGetMyProfile()
+  const { account, profiles } = await serviceGetMyProfile()
 
-  return <ProfileClient currentUser={currentUser} initialProfile={profile} />
+  return (
+    <ProfileClient
+      currentUser={currentUser}
+      initialAccount={account}
+      initialProfiles={profiles}
+    />
+  )
 }

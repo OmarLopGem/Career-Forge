@@ -35,6 +35,7 @@ function createEmptyApplicationForm(jobListings) {
   return {
     mode: 'manual',
     jobListingId: jobListings[0]?._id ?? '',
+    cvProfileId: '',
     status: 'applied',
     appliedAt: formatDate(today),
     promisedResponseDate: '',
@@ -48,6 +49,15 @@ function createEmptyApplicationForm(jobListings) {
       source: 'Manual',
     },
   }
+}
+
+function getDefaultCVProfileId(cvProfiles) {
+  return cvProfiles.find((profile) => profile.isDefault)?._id ?? cvProfiles[0]?._id ?? ''
+}
+
+function buildCVProfileOptionLabel(profile) {
+  const detail = profile.targetRole || profile.professionalNiche || ''
+  return [profile.title, detail].filter(Boolean).join(' - ')
 }
 
 function buildApplicationOptionLabel(application, jobInfo) {
@@ -68,17 +78,22 @@ export default function CalendarClient({
   initialApplications,
   initialEvents,
   initialJobListings,
+  initialCVProfiles,
 }) {
   const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [selectedDate, setSelectedDate] = useState(formatDate(today))
   const [applications, setApplications] = useState(initialApplications)
   const [events, setEvents] = useState(initialEvents)
   const [jobListings] = useState(initialJobListings)
+  const [cvProfiles] = useState(initialCVProfiles)
   const [activeView, setActiveView] = useState('active')
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false)
   const [eventForm, setEventForm] = useState(createEmptyEventForm(formatDate(today), initialApplications.length > 0))
-  const [applicationForm, setApplicationForm] = useState(createEmptyApplicationForm(initialJobListings))
+  const [applicationForm, setApplicationForm] = useState(() => ({
+    ...createEmptyApplicationForm(initialJobListings),
+    cvProfileId: getDefaultCVProfileId(initialCVProfiles),
+  }))
   const [eventApplicationQuery, setEventApplicationQuery] = useState('')
   const [isEventApplicationDropdownOpen, setIsEventApplicationDropdownOpen] = useState(false)
   const [isEventApplicationFilterActive, setIsEventApplicationFilterActive] = useState(false)
@@ -87,12 +102,17 @@ export default function CalendarClient({
   const [isApplicationListingFilterActive, setIsApplicationListingFilterActive] = useState(false)
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
+  const hasCVProfiles = cvProfiles.length > 0
 
   const monthDays = useMemo(() => getMonthDays(currentMonth), [currentMonth])
 
   const listingMap = useMemo(() => {
     return new Map(jobListings.map((listing) => [listing._id, listing]))
   }, [jobListings])
+
+  const cvProfileMap = useMemo(() => {
+    return new Map(cvProfiles.map((profile) => [profile._id, profile]))
+  }, [cvProfiles])
 
   const visibleApplications = useMemo(() => {
     return applications.filter((application) => {
@@ -278,7 +298,15 @@ export default function CalendarClient({
   }
 
   const openCreateApplicationModal = () => {
-    const nextForm = createEmptyApplicationForm(jobListings)
+    if (!hasCVProfiles) {
+      setError('Create a CV profile in CV Assistant before adding job applications.')
+      return
+    }
+
+    const nextForm = {
+      ...createEmptyApplicationForm(jobListings),
+      cvProfileId: getDefaultCVProfileId(cvProfiles),
+    }
 
     setApplicationForm(nextForm)
     syncSelectedJobListingQuery(nextForm.jobListingId)
@@ -352,6 +380,7 @@ export default function CalendarClient({
         const payload = applicationForm.mode === 'listing'
           ? {
               jobListingId: applicationForm.jobListingId,
+              cvProfileId: applicationForm.cvProfileId,
               status: applicationForm.status,
               appliedAt: applicationForm.appliedAt,
               promisedResponseDate: applicationForm.promisedResponseDate,
@@ -359,6 +388,7 @@ export default function CalendarClient({
               adaptedDescription: applicationForm.adaptedDescription,
             }
           : {
+              cvProfileId: applicationForm.cvProfileId,
               status: applicationForm.status,
               appliedAt: applicationForm.appliedAt,
               promisedResponseDate: applicationForm.promisedResponseDate,
@@ -701,6 +731,12 @@ export default function CalendarClient({
                 ) : (
                   visibleApplications.map((application) => {
                     const jobInfo = getJobInfoFromApplication(application)
+                    const linkedProfile = application.cvProfileId
+                      ? cvProfileMap.get(application.cvProfileId)
+                      : null
+                    const profileLabel = linkedProfile
+                      ? buildCVProfileOptionLabel(linkedProfile)
+                      : application.cvProfileSnapshot?.title ?? 'Legacy application'
 
                     return (
                       <div key={application._id} className="rounded-2xl border border-border bg-background p-4">
@@ -726,6 +762,11 @@ export default function CalendarClient({
                             <p className="text-text-muted">Last Activity</p>
                             <p className="font-semibold text-navy">{application.lastActivityAt}</p>
                           </div>
+                        </div>
+
+                        <div className="mt-4 rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
+                          <p className="text-text-muted">CV profile used</p>
+                          <p className="mt-1 font-semibold text-navy">{profileLabel}</p>
                         </div>
 
                         {application.isArchived ? (
@@ -1139,6 +1180,26 @@ export default function CalendarClient({
               </div>
             )}
 
+            <label className="block">
+              <span className="text-sm font-semibold text-navy">CV Profile</span>
+              <select
+                value={applicationForm.cvProfileId}
+                onChange={(event) =>
+                  setApplicationForm((current) => ({ ...current, cvProfileId: event.target.value }))
+                }
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+              >
+                {cvProfiles.map((profile) => (
+                  <option key={profile._id} value={profile._id}>
+                    {buildCVProfileOptionLabel(profile)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-text-muted">
+                This is the professional profile that will be tied to this application.
+              </p>
+            </label>
+
             <div className="grid gap-5 md:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-semibold text-navy">Status</span>
@@ -1208,7 +1269,7 @@ export default function CalendarClient({
               </button>
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || !applicationForm.cvProfileId}
                 className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isPending ? 'Saving...' : 'Save Application'}

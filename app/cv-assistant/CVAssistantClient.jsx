@@ -21,6 +21,7 @@ import CVUploadDropzone from './components/CVUploadDropzone.jsx'
 import ProfileList from './components/ProfileList.jsx'
 import ProfileCompletionCard from './components/ProfileCompletionCard.jsx'
 import PersonalInfoForm from './components/PersonalInfoForm.jsx'
+import ProfessionalSummaryForm from './components/ProfessionalSummaryForm.jsx'
 import TargetRoleForm from './components/TargetRoleForm.jsx'
 import AnalysisPanel from './components/AnalysisPanel.jsx'
 import TemplateGrid from './components/TemplateGrid.jsx'
@@ -92,6 +93,23 @@ export default function CVAssistantClient() {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ target }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.error?.message ?? 'Save failed.')
+      }
+      await profileHook.refresh()
+    },
+    [selectedProfileId, profileHook],
+  )
+
+  const handleSaveProfessionalSummary = useCallback(
+    async (professionalSummary) => {
+      if (!selectedProfileId) return
+      const res = await fetch(`/api/cv/profiles/${selectedProfileId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ professionalSummary }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -208,6 +226,11 @@ export default function CVAssistantClient() {
             <PersonalInfoForm
               profile={profile}
               onSave={handleSavePersonalInfo}
+            />
+            <ProfessionalSummaryForm
+              key={`${profile._id}-summary`}
+              profile={profile}
+              onSave={handleSaveProfessionalSummary}
             />
             <TargetRoleForm profile={profile} onSave={handleSaveTarget} />
             <StepActions

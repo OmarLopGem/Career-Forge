@@ -1,75 +1,64 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import Link from 'next/link'
+import { useMemo, useState, useTransition } from 'react'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
 
-// The profile editor keeps a form-specific shape so the UI can work with free-form
-// skills text and repeatable experience rows before normalizing for the API.
-function createDefaultExperienceItem() {
+function createFormState(account, currentUser) {
   return {
-    company: '',
-    title: '',
-    startDate: '',
-    endDate: '',
-    description: '',
-  }
-}
-
-function createFormState(profile) {
-  return {
-    photoUrl: profile?.photoUrl ?? '',
-    headline: profile?.headline ?? '',
-    description: profile?.description ?? '',
-    skillsText: Array.isArray(profile?.skills) ? profile.skills.join(', ') : '',
-    experience: Array.isArray(profile?.experience) && profile.experience.length
-      ? profile.experience
-      : [createDefaultExperienceItem()],
+    firstName: account?.firstName ?? currentUser?.firstName ?? '',
+    lastName: account?.lastName ?? currentUser?.lastName ?? '',
+    email: account?.email ?? currentUser?.email ?? '',
+    dateOfBirth: account?.dateOfBirth ?? '',
+    photoUrl: account?.photoUrl ?? '',
+    headline: account?.headline ?? '',
+    phone: account?.phone ?? '',
+    location: account?.location ?? '',
+    linkedinUrl: account?.linkedinUrl ?? '',
+    githubUrl: account?.githubUrl ?? '',
+    portfolioUrl: account?.portfolioUrl ?? '',
   }
 }
 
 function buildPayload(form) {
   return {
+    firstName: form.firstName,
+    lastName: form.lastName,
+    dateOfBirth: form.dateOfBirth,
     photoUrl: form.photoUrl,
     headline: form.headline,
-    description: form.description,
-    skills: form.skillsText
-      .split(',')
-      .map((skill) => skill.trim())
-      .filter(Boolean),
-    experience: form.experience,
+    phone: form.phone,
+    location: form.location,
+    linkedinUrl: form.linkedinUrl,
+    githubUrl: form.githubUrl,
+    portfolioUrl: form.portfolioUrl,
   }
 }
 
-export default function ProfileClient({ currentUser, initialProfile }) {
+function formatDate(value) {
+  if (!value) return 'Never'
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString()
+}
+
+function getCompletionTone(score) {
+  if (score >= 80) return 'text-success-green'
+  if (score >= 50) return 'text-brand-blue'
+  return 'text-forge-orange'
+}
+
+export default function ProfileClient({ currentUser, initialAccount, initialProfiles }) {
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [form, setForm] = useState(createFormState(initialProfile))
+  const [account, setAccount] = useState(initialAccount)
+  const [profiles] = useState(initialProfiles)
+  const [form, setForm] = useState(() => createFormState(initialAccount, currentUser))
 
-  const updateExperience = (index, field, value) => {
-    setForm((current) => ({
-      ...current,
-      experience: current.experience.map((item, currentIndex) => (
-        currentIndex === index
-          ? { ...item, [field]: value }
-          : item
-      )),
-    }))
-  }
-
-  const addExperience = () => {
-    setForm((current) => ({
-      ...current,
-      experience: [...current.experience, createDefaultExperienceItem()],
-    }))
-  }
-
-  const removeExperience = (index) => {
-    setForm((current) => ({
-      ...current,
-      experience: current.experience.filter((_, currentIndex) => currentIndex !== index),
-    }))
-  }
+  const defaultProfile = useMemo(
+    () => profiles.find((profile) => profile.isDefault) ?? profiles[0] ?? null,
+    [profiles],
+  )
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -83,8 +72,9 @@ export default function ProfileClient({ currentUser, initialProfile }) {
           body: JSON.stringify(buildPayload(form)),
         })
 
-        setForm(createFormState(result.profile))
-        setMessage('Profile updated successfully.')
+        setAccount(result.account)
+        setForm(createFormState(result.account, result.user))
+        setMessage('Account details updated successfully.')
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong.')
       }
@@ -92,180 +82,242 @@ export default function ProfileClient({ currentUser, initialProfile }) {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-6 py-10">
-      <div className="mx-auto max-w-5xl rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)]">
-            Career Profile
-          </p>
-          <h1 className="text-4xl font-bold text-[var(--navy)]">
-            {currentUser.firstName} {currentUser.lastName}
-          </h1>
-          <p className="text-[var(--text-muted)]">{currentUser.email}</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="mt-8 space-y-8">
-          <div className="grid gap-5 md:grid-cols-2">
-            <Field
-              id="photoUrl"
-              label="Photo URL"
-              value={form.photoUrl}
-              onChange={(value) => setForm((current) => ({ ...current, photoUrl: value }))}
-            />
-            <Field
-              id="headline"
-              label="Professional Headline"
-              value={form.headline}
-              onChange={(value) => setForm((current) => ({ ...current, headline: value }))}
-            />
-          </div>
-
-          <TextAreaField
-            id="description"
-            label="Description"
-            rows={5}
-            value={form.description}
-            onChange={(value) => setForm((current) => ({ ...current, description: value }))}
-          />
-
-          <TextAreaField
-            id="skills"
-            label="Skills"
-            rows={3}
-            hint="Separate each skill with a comma."
-            value={form.skillsText}
-            onChange={(value) => setForm((current) => ({ ...current, skillsText: value }))}
-          />
-
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-[var(--navy)]">Experience</h2>
-                <p className="text-sm text-[var(--text-muted)]">
-                  Add the roles you want to highlight in your profile.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={addExperience}
-                className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--navy)] hover:bg-[var(--blue-soft)]"
-              >
-                Add experience
-              </button>
+    <main className="min-h-screen bg-background px-6 py-10">
+      <div className="mx-auto max-w-6xl space-y-8">
+        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+          <div className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
+                Profile Hub
+              </p>
+              <h1 className="mt-3 text-4xl font-bold text-navy">
+                {account.firstName} {account.lastName}
+              </h1>
+              <p className="mt-2 text-text-muted">{account.email}</p>
+              <p className="mt-3 max-w-2xl text-sm text-text-muted">
+                This page combines account-level identity details with the professional CV
+                profiles you use throughout the app.
+              </p>
             </div>
 
-            {form.experience.map((item, index) => (
-              <div
-                key={`${item.company}-${index}`}
-                className="rounded-2xl border border-[var(--border)] bg-white p-5"
+            <div className="grid gap-3 sm:grid-cols-2">
+              <QuickStat label="Professional Profiles" value={profiles.length} />
+              <QuickStat
+                label="Default Profile"
+                value={defaultProfile?.title ?? 'Not set'}
+              />
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-8">
+            <div>
+              <h2 className="text-2xl font-bold text-navy">Account details</h2>
+              <p className="mt-2 text-sm text-text-muted">
+                These are the unique user details that stay the same across your professional profiles.
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <Field
+                id="firstName"
+                label="First Name"
+                value={form.firstName}
+                onChange={(value) => setForm((current) => ({ ...current, firstName: value }))}
+              />
+              <Field
+                id="lastName"
+                label="Last Name"
+                value={form.lastName}
+                onChange={(value) => setForm((current) => ({ ...current, lastName: value }))}
+              />
+              <Field id="email" label="Email" type="email" value={form.email} disabled />
+              <Field
+                id="dateOfBirth"
+                label="Date of Birth"
+                type="date"
+                value={form.dateOfBirth}
+                onChange={(value) => setForm((current) => ({ ...current, dateOfBirth: value }))}
+              />
+              <Field
+                id="photoUrl"
+                label="Photo URL"
+                value={form.photoUrl}
+                onChange={(value) => setForm((current) => ({ ...current, photoUrl: value }))}
+              />
+              <Field
+                id="headline"
+                label="Account Headline"
+                value={form.headline}
+                onChange={(value) => setForm((current) => ({ ...current, headline: value }))}
+              />
+              <Field
+                id="phone"
+                label="Phone"
+                value={form.phone}
+                onChange={(value) => setForm((current) => ({ ...current, phone: value }))}
+              />
+              <Field
+                id="location"
+                label="Location"
+                value={form.location}
+                onChange={(value) => setForm((current) => ({ ...current, location: value }))}
+              />
+              <Field
+                id="linkedinUrl"
+                label="LinkedIn URL"
+                value={form.linkedinUrl}
+                onChange={(value) => setForm((current) => ({ ...current, linkedinUrl: value }))}
+              />
+              <Field
+                id="githubUrl"
+                label="GitHub URL"
+                value={form.githubUrl}
+                onChange={(value) => setForm((current) => ({ ...current, githubUrl: value }))}
+              />
+            </div>
+
+            <Field
+              id="portfolioUrl"
+              label="Portfolio URL"
+              value={form.portfolioUrl}
+              onChange={(value) => setForm((current) => ({ ...current, portfolioUrl: value }))}
+            />
+
+            {message ? (
+              <p className="rounded-xl bg-blue-soft px-4 py-3 text-sm font-medium text-brand-blue">
+                {message}
+              </p>
+            ) : null}
+
+            {error ? (
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                {error}
+              </p>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="rounded-xl bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-hover disabled:opacity-70"
               >
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field
-                    id={`company-${index}`}
-                    label="Company"
-                    value={item.company}
-                    onChange={(value) => updateExperience(index, 'company', value)}
-                  />
-                  <Field
-                    id={`title-${index}`}
-                    label="Job Title"
-                    value={item.title}
-                    onChange={(value) => updateExperience(index, 'title', value)}
-                  />
-                  <Field
-                    id={`startDate-${index}`}
-                    label="Start Date"
-                    type="month"
-                    value={item.startDate}
-                    onChange={(value) => updateExperience(index, 'startDate', value)}
-                  />
-                  <Field
-                    id={`endDate-${index}`}
-                    label="End Date"
-                    type="month"
-                    value={item.endDate}
-                    onChange={(value) => updateExperience(index, 'endDate', value)}
-                  />
-                </div>
+                {isPending ? 'Saving...' : 'Save account details'}
+              </button>
+              <p className="text-sm text-text-muted">
+                Last updated: {formatDate(account.updatedAt)}
+              </p>
+            </div>
+          </form>
+        </section>
 
-                <div className="mt-4">
-                  <TextAreaField
-                    id={`description-${index}`}
-                    label="Role Description"
-                    rows={4}
-                    value={item.description}
-                    onChange={(value) => updateExperience(index, 'description', value)}
-                  />
-                </div>
+        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
+                Professional Profiles
+              </p>
+              <h2 className="mt-3 text-2xl font-bold text-navy">Your CV workspaces</h2>
+              <p className="mt-2 max-w-2xl text-sm text-text-muted">
+                These are the professional profiles you use in CV Assistant, job tracking,
+                and resume generation.
+              </p>
+            </div>
 
-                {form.experience.length > 1 ? (
-                  <button
-                    type="button"
-                    onClick={() => removeExperience(index)}
-                    className="mt-4 text-sm font-semibold text-red-600 hover:underline"
-                  >
-                    Remove experience
-                  </button>
-                ) : null}
-              </div>
-            ))}
-          </section>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/cv-assistant"
+                className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-hover"
+              >
+                Open CV Assistant
+              </Link>
+              <Link
+                href="/jobs"
+                className="rounded-xl border border-border px-5 py-3 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue"
+              >
+                Go to Job Matches
+              </Link>
+            </div>
+          </div>
 
-          {message ? (
-            <p className="rounded-xl bg-[var(--blue-soft)] px-4 py-3 text-sm font-medium text-[var(--brand-blue)]">
-              {message}
-            </p>
-          ) : null}
+          {profiles.length === 0 ? (
+            <div className="mt-6 rounded-3xl border border-dashed border-border bg-background p-8 text-center">
+              <p className="text-sm text-text-muted">
+                You do not have any professional profiles yet. Import a CV in the assistant to create your first one.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {profiles.map((profile) => (
+                <article
+                  key={profile._id}
+                  className="rounded-3xl border border-border bg-background p-5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-navy">{profile.title}</h3>
+                      <p className="mt-1 text-sm text-text-muted">
+                        {profile.targetRole ?? profile.professionalNiche ?? 'No target role set yet'}
+                      </p>
+                    </div>
+                    {profile.isDefault ? (
+                      <span className="rounded-full bg-cyan-soft px-3 py-1 text-xs font-semibold text-success-green">
+                        Default
+                      </span>
+                    ) : null}
+                  </div>
 
-          {error ? (
-            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-              {error}
-            </p>
-          ) : null}
+                  <div className="mt-5 flex items-center gap-3">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-border">
+                      <div
+                        className="h-full rounded-full bg-success-green"
+                        style={{ width: `${Math.min(100, profile.completionScore)}%` }}
+                      />
+                    </div>
+                    <span className={`text-sm font-semibold ${getCompletionTone(profile.completionScore)}`}>
+                      {profile.completionScore}%
+                    </span>
+                  </div>
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded-xl bg-[var(--brand-blue)] px-6 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-blue-hover)] disabled:opacity-70"
-          >
-            {isPending ? 'Saving...' : 'Save profile'}
-          </button>
-        </form>
+                  <div className="mt-5 flex items-center justify-between gap-3 text-sm text-text-muted">
+                    <span>Updated {formatDate(profile.updatedAt)}</span>
+                    <Link
+                      href="/cv-assistant"
+                      className="font-semibold text-brand-blue hover:underline"
+                    >
+                      Manage profile
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   )
 }
 
-function Field({ id, label, type = 'text', value, onChange }) {
+function Field({ id, label, type = 'text', value, onChange, disabled = false }) {
   return (
     <label className="block">
-      <span className="text-sm font-semibold text-[var(--navy)]">{label}</span>
+      <span className="text-sm font-semibold text-navy">{label}</span>
       <input
         id={id}
         type={type}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm text-[var(--text-main)] outline-none focus:border-[var(--brand-blue)]"
+        disabled={disabled}
+        onChange={(event) => onChange?.(event.target.value)}
+        className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none transition focus:border-brand-blue disabled:cursor-not-allowed disabled:opacity-70"
       />
     </label>
   )
 }
 
-function TextAreaField({ id, label, value, onChange, rows, hint }) {
+function QuickStat({ label, value }) {
   return (
-    <label className="block">
-      <span className="text-sm font-semibold text-[var(--navy)]">{label}</span>
-      {hint ? (
-        <p className="mt-1 text-sm text-[var(--text-muted)]">{hint}</p>
-      ) : null}
-      <textarea
-        id={id}
-        rows={rows}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm text-[var(--text-main)] outline-none focus:border-[var(--brand-blue)]"
-      />
-    </label>
+    <div className="rounded-2xl border border-border bg-background px-4 py-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">{label}</p>
+      <p className="mt-2 text-lg font-bold text-navy">{value}</p>
+    </div>
   )
 }

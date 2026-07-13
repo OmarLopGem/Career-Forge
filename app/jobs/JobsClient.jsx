@@ -5,13 +5,29 @@ import Link from 'next/link'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
 import { jobStatusLabels, jobStatusStyles } from '@/lib/job-tracker/client/constants.js'
 
+function getDefaultCVProfileId(cvProfiles) {
+  return cvProfiles.find((profile) => profile.isDefault)?._id ?? cvProfiles[0]?._id ?? ''
+}
+
+function buildCVProfileLabel(profile) {
+  const detail = profile.targetRole || profile.professionalNiche || ''
+  return [profile.title, detail].filter(Boolean).join(' - ')
+}
+
 // This page displays the shared catalog, but the tracking action always creates
 // a private application record tied to the current user.
-export default function JobsClient({ initialJobListings, initialApplications }) {
+export default function JobsClient({ initialJobListings, initialApplications, initialCVProfiles }) {
   const [jobListings] = useState(initialJobListings)
   const [applications, setApplications] = useState(initialApplications)
+  const [cvProfiles] = useState(initialCVProfiles)
+  const [selectedCVProfileId, setSelectedCVProfileId] = useState(() => getDefaultCVProfileId(initialCVProfiles))
   const [feedback, setFeedback] = useState('')
   const [isPending, startTransition] = useTransition()
+  const selectedCVProfile = useMemo(
+    () => cvProfiles.find((profile) => profile._id === selectedCVProfileId) ?? null,
+    [cvProfiles, selectedCVProfileId],
+  )
+  const canTrackJobs = cvProfiles.length > 0 && Boolean(selectedCVProfileId)
 
   const trackedByListingId = useMemo(() => {
     // A map keeps repeated "already tracked?" lookups O(1) while rendering cards.
@@ -25,6 +41,11 @@ export default function JobsClient({ initialJobListings, initialApplications }) 
   const handleTrackJob = (listingId) => {
     setFeedback('')
 
+    if (!selectedCVProfileId) {
+      setFeedback('Create or select a CV profile before tracking jobs.')
+      return
+    }
+
     startTransition(async () => {
       try {
         // Tracking a job is just a specialized job-application creation flow.
@@ -32,12 +53,13 @@ export default function JobsClient({ initialJobListings, initialApplications }) 
           method: 'POST',
           body: JSON.stringify({
             jobListingId: listingId,
+            cvProfileId: selectedCVProfileId,
             status: 'saved',
           }),
         })
 
         setApplications((current) => [application, ...current])
-        setFeedback('Job saved to your tracker.')
+        setFeedback(`Job saved using "${selectedCVProfile?.title ?? 'your selected profile'}".`)
       } catch (err) {
         setFeedback(err instanceof Error ? err.message : 'Unable to track this job.')
       }
@@ -74,6 +96,45 @@ export default function JobsClient({ initialJobListings, initialApplications }) 
             {feedback}
           </p>
         ) : null}
+
+        <div className="mt-6 rounded-[2rem] border border-border bg-surface p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-navy">Profile used for tracking</h2>
+              <p className="mt-1 text-sm text-text-muted">
+                Every saved job now records which professional CV profile you want to use.
+              </p>
+            </div>
+
+            {cvProfiles.length > 0 ? (
+              <label className="block min-w-[280px]">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
+                  CV Profile
+                </span>
+                <select
+                  value={selectedCVProfileId}
+                  onChange={(event) => setSelectedCVProfileId(event.target.value)}
+                  className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+                >
+                  {cvProfiles.map((profile) => (
+                    <option key={profile._id} value={profile._id}>
+                      {buildCVProfileLabel(profile)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border bg-background px-4 py-3 text-sm text-text-muted">
+                No CV profiles yet.
+                {' '}
+                <Link href="/cv-assistant" className="font-semibold text-brand-blue hover:underline">
+                  Create one in CV Assistant
+                </Link>
+                .
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {jobListings.map((listing) => {
@@ -135,10 +196,10 @@ export default function JobsClient({ initialJobListings, initialApplications }) 
                   <button
                     type="button"
                     onClick={() => handleTrackJob(listing._id)}
-                    disabled={isPending || Boolean(trackedApplication)}
+                    disabled={isPending || Boolean(trackedApplication) || !canTrackJobs}
                     className="rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {trackedApplication ? 'Already tracked' : 'Track Job'}
+                    {trackedApplication ? 'Already tracked' : canTrackJobs ? 'Track Job' : 'Create CV profile first'}
                   </button>
 
                   {listing.url ? (
