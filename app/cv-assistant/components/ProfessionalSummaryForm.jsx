@@ -3,7 +3,6 @@
 import { useState } from 'react'
 
 // Each professional profile keeps its own summary so users can tailor how they
-// present themselves for different roles without changing account-level data.
 export default function ProfessionalSummaryForm({ profile, onSave }) {
   const [summary, setSummary] = useState(profile.professionalSummary ?? '')
   const [saving, setSaving] = useState(false)
@@ -31,7 +30,9 @@ export default function ProfessionalSummaryForm({ profile, onSave }) {
         <div>
           <h3 className="text-lg font-bold text-navy">Professional summary</h3>
           <p className="mt-1 text-sm text-text-muted">
+
             Write a profile-specific description for the kind of work this CV targets.
+
           </p>
         </div>
         {saved ? (
