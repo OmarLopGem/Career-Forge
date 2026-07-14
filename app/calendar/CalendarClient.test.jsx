@@ -108,6 +108,16 @@ const initialJobListings = [
   },
 ]
 
+const initialCVProfiles = [
+  {
+    _id: 'cv-profile-1',
+    title: 'Frontend Profile',
+    isDefault: true,
+    targetRole: 'Frontend Developer',
+    professionalNiche: 'Frontend Development',
+  },
+]
+
 describe('CalendarClient', () => {
   it('renders applications from server data', () => {
     render(
@@ -115,6 +125,7 @@ describe('CalendarClient', () => {
         initialApplications={initialApplications}
         initialEvents={initialEvents}
         initialJobListings={initialJobListings}
+        initialCVProfiles={initialCVProfiles}
       />,
     )
 
@@ -130,6 +141,7 @@ describe('CalendarClient', () => {
         initialApplications={initialApplications}
         initialEvents={initialEvents}
         initialJobListings={initialJobListings}
+        initialCVProfiles={initialCVProfiles}
       />,
     )
 
@@ -147,6 +159,7 @@ describe('CalendarClient', () => {
         initialApplications={initialApplications}
         initialEvents={initialEvents}
         initialJobListings={initialJobListings}
+        initialCVProfiles={initialCVProfiles}
       />,
     )
 
@@ -174,6 +187,7 @@ describe('CalendarClient', () => {
         initialApplications={initialApplications}
         initialEvents={initialEvents}
         initialJobListings={initialJobListings}
+        initialCVProfiles={initialCVProfiles}
       />,
     )
 
@@ -197,6 +211,7 @@ describe('CalendarClient', () => {
         initialApplications={initialApplications}
         initialEvents={initialEvents}
         initialJobListings={initialJobListings}
+        initialCVProfiles={initialCVProfiles}
       />,
     )
 
@@ -213,6 +228,7 @@ describe('CalendarClient', () => {
         initialApplications={initialApplications}
         initialEvents={initialEvents}
         initialJobListings={initialJobListings}
+        initialCVProfiles={initialCVProfiles}
       />,
     )
 

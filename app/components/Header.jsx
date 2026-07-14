@@ -5,6 +5,24 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { requestJsonWithoutBody } from "@/lib/job-tracker/client/api.js";
 
+function BellIcon({ className = "" }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+      <path d="M10 21a2 2 0 0 0 4 0" />
+    </svg>
+  );
+}
+
 // The header reads the server-provided user snapshot and derives the navigation
 // model locally so role-based links stay consistent across desktop and mobile.
 export default function Header({ currentUser = null }) {
@@ -45,6 +63,11 @@ export default function Header({ currentUser = null }) {
       href: "/calendar",
     },
     {
+      name: "Notifications",
+      href: "/notifications",
+      desktopHidden: true,
+    },
+    {
       name: "Profile",
       href: "/profile",
     },
@@ -58,6 +81,10 @@ export default function Header({ currentUser = null }) {
     {
       name: "Admin Users",
       href: "/admin/users",
+    },
+    {
+      name: "Admin Notifications",
+      href: "/admin/notifications",
     },
   ];
 
@@ -111,7 +138,7 @@ export default function Header({ currentUser = null }) {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-2">
-            {navLinks.map((link) => {
+            {navLinks.filter((link) => !link.desktopHidden).map((link) => {
               const isActive = isActiveLink(link.href);
 
               return (
@@ -119,25 +146,27 @@ export default function Header({ currentUser = null }) {
                   key={link.name}
                   href={link.href}
                   className={`
-                    group relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                    group relative rounded-lg text-sm font-medium transition-all duration-300
                     ${
                       isActive
                         ? "text-brand-blue bg-blue-soft"
                         : "text-text-muted hover:text-brand-blue hover:bg-cyan-soft"
                     }
+                    px-4 py-2
                   `}
                 >
                   {link.name}
 
                   <span
                     className={`
-                      absolute left-4 right-4 -bottom-1 h-0.5 rounded-full bg-brand-blue 
+                      absolute -bottom-1 h-0.5 rounded-full bg-brand-blue
                       transition-all duration-300 origin-center
                       ${
                         isActive
                           ? "opacity-100 scale-x-100"
                           : "opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100"
                       }
+                      left-4 right-4
                     `}
                   />
                 </Link>
@@ -147,8 +176,21 @@ export default function Header({ currentUser = null }) {
             {isLoggedIn ? (
               <>
                 <Link
-                  href="/resume"
-                  className="ml-3 rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
+                  href="/notifications"
+                  aria-label="Notifications"
+                  title="Notifications"
+                  className={`ml-2 rounded-xl p-3 transition-all duration-300 ${
+                    isActiveLink("/notifications")
+                      ? "bg-blue-soft text-brand-blue"
+                      : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                  }`}
+                >
+                  <BellIcon className="h-5 w-5" />
+                </Link>
+
+                <Link
+                  href="/cv-assistant"
+                  className="ml-2 rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md"
                 >
                   Upload Resume
                 </Link>
@@ -242,7 +284,7 @@ export default function Header({ currentUser = null }) {
             {isLoggedIn ? (
               <>
                 <Link
-                  href="/resume"
+                  href="/cv-assistant"
                   onClick={() => setIsOpen(false)}
                   className="mt-2 rounded-xl bg-brand-blue px-4 py-3 text-center text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
                 >

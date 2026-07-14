@@ -6,6 +6,7 @@ import {
   serviceListJobApplications,
   serviceListJobListings,
 } from '@/lib/job-tracker/server/job-tracker.service.js'
+import { serviceListProfiles } from '@/lib/cv-assistant/server/cv-service.js'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,10 +19,11 @@ export default async function CalendarPage() {
     redirect('/login?redirectTo=/calendar')
   }
 
-  const [{ applications }, { events }, { jobListings }] = await Promise.all([
+  const [{ applications }, { events }, { jobListings }, cvProfiles] = await Promise.all([
     serviceListJobApplications(),
     serviceListCalendarEvents(),
     serviceListJobListings(),
+    serviceListProfiles(),
   ])
 
   return (
@@ -29,6 +31,7 @@ export default async function CalendarPage() {
       initialApplications={applications}
       initialEvents={events}
       initialJobListings={jobListings}
+      initialCVProfiles={cvProfiles}
     />
   )
 }

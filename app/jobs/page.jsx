@@ -5,6 +5,7 @@ import {
   serviceListJobApplications,
   serviceListJobListings,
 } from '@/lib/job-tracker/server/job-tracker.service.js'
+import { serviceListProfiles } from '@/lib/cv-assistant/server/cv-service.js'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,15 +18,17 @@ export default async function JobsPage() {
     redirect('/login?redirectTo=/jobs')
   }
 
-  const [{ jobListings }, { applications }] = await Promise.all([
+  const [{ jobListings }, { applications }, cvProfiles] = await Promise.all([
     serviceListJobListings(),
     serviceListJobApplications(),
+    serviceListProfiles(),
   ])
 
   return (
     <JobsClient
       initialJobListings={jobListings}
       initialApplications={applications}
+      initialCVProfiles={cvProfiles}
     />
   )
 }

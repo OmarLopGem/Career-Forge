@@ -5,8 +5,8 @@ import { serviceGetMyProfile } from '@/lib/server/profile/user-profile.service.j
 
 export const dynamic = 'force-dynamic'
 
-// The profile page resolves auth and the user's editable profile on the server,
-// then hands a stable snapshot to the client form.
+// The profile page resolves auth and combines account identity with the user's
+// professional CV workspaces before the client hydrates.
 export default async function ProfilePage() {
   const currentUser = await getCurrentUserFromRequest()
 
@@ -14,7 +14,13 @@ export default async function ProfilePage() {
     redirect('/login?redirectTo=/profile')
   }
 
-  const { profile } = await serviceGetMyProfile()
+  const { account, profiles } = await serviceGetMyProfile()
 
-  return <ProfileClient currentUser={currentUser} initialProfile={profile} />
+  return (
+    <ProfileClient
+      currentUser={currentUser}
+      initialAccount={account}
+      initialProfiles={profiles}
+    />
+  )
 }
