@@ -95,14 +95,17 @@ export default function ProfileClient({ currentUser, initialAccount, initialProf
               </h1>
               <p className="mt-2 text-text-muted">{account.email}</p>
               <p className="mt-3 max-w-2xl text-sm text-text-muted">
-                This page combines your account-level identity details with the professional
-                CV profiles you use throughout Career Forge.
+                This page combines account-level identity details with the professional CV
+                profiles you use throughout the app.
               </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <QuickStat label="Professional Profiles" value={profiles.length} />
-              <QuickStat label="Default Profile" value={defaultProfile?.title ?? 'Not set'} />
+              <QuickStat
+                label="Default Profile"
+                value={defaultProfile?.title ?? 'Not set'}
+              />
             </div>
           </div>
 
@@ -110,7 +113,7 @@ export default function ProfileClient({ currentUser, initialAccount, initialProf
             <div>
               <h2 className="text-2xl font-bold text-navy">Account details</h2>
               <p className="mt-2 text-sm text-text-muted">
-                These are your unique user details. Career-specific summaries and experience stay in each CV profile.
+                These are the unique user details that stay the same across your professional profiles.
               </p>
             </div>
 
@@ -215,7 +218,8 @@ export default function ProfileClient({ currentUser, initialAccount, initialProf
               </p>
               <h2 className="mt-3 text-2xl font-bold text-navy">Your CV workspaces</h2>
               <p className="mt-2 max-w-2xl text-sm text-text-muted">
-                These profiles power CV Assistant, job tracking, and your private progress history.
+                These are the professional profiles you use in CV Assistant, job tracking,
+                and resume generation.
               </p>
             </div>
 
@@ -244,7 +248,10 @@ export default function ProfileClient({ currentUser, initialAccount, initialProf
           ) : (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {profiles.map((profile) => (
-                <article key={profile._id} className="rounded-3xl border border-border bg-background p-5">
+                <article
+                  key={profile._id}
+                  className="rounded-3xl border border-border bg-background p-5"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-lg font-bold text-navy">{profile.title}</h3>
@@ -273,7 +280,10 @@ export default function ProfileClient({ currentUser, initialAccount, initialProf
 
                   <div className="mt-5 flex items-center justify-between gap-3 text-sm text-text-muted">
                     <span>Updated {formatDate(profile.updatedAt)}</span>
-                    <Link href="/cv-assistant" className="font-semibold text-brand-blue hover:underline">
+                    <Link
+                      href="/cv-assistant"
+                      className="font-semibold text-brand-blue hover:underline"
+                    >
                       Manage profile
                     </Link>
                   </div>

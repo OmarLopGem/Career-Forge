@@ -1180,6 +1180,26 @@ export default function CalendarClient({
               </div>
             )}
 
+            <label className="block">
+              <span className="text-sm font-semibold text-navy">CV Profile</span>
+              <select
+                value={applicationForm.cvProfileId}
+                onChange={(event) =>
+                  setApplicationForm((current) => ({ ...current, cvProfileId: event.target.value }))
+                }
+                className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none focus:border-brand-blue"
+              >
+                {cvProfiles.map((profile) => (
+                  <option key={profile._id} value={profile._id}>
+                    {buildCVProfileOptionLabel(profile)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-text-muted">
+                This is the professional profile that will be tied to this application.
+              </p>
+            </label>
+
             <div className="grid gap-5 md:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-semibold text-navy">CV Profile</span>
