@@ -27,23 +27,21 @@ export default function Footer() {
       ],
     },
     {
-      title: 'Company',
+      title: 'Access',
       links: [
-        { name: 'About', href: '/about' },
-        { name: 'Contact Admin', href: '/contact' },
-        { name: 'Privacy Policy', href: '/privacy' },
+        { name: 'Login', href: '/login' },
+        { name: 'Register', href: '/register' },
+        { name: 'Notifications', href: '/notifications' },
       ],
     },
   ]
 
   return (
-    <footer className="bg-surface border-t border-border">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          
-          {/* Brand */}
+    <footer className="border-t border-border bg-surface">
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-1">
-            <Link href="/" className="flex items-center gap-3 group w-fit">
+            <Link href="/" className="group flex w-fit items-center gap-3">
               <img
                 src="/career-forge-logo.png"
                 alt="Career Forge Logo"
@@ -55,32 +53,29 @@ export default function Footer() {
               </span>
             </Link>
 
-            <p className="mt-4 text-sm leading-6 text-text-muted max-w-xs">
+            <p className="mt-4 max-w-xs text-sm leading-6 text-text-muted">
               A career workspace that helps job seekers improve their resume,
               find matched jobs, track applications, and prepare for interviews.
             </p>
 
             <Link
               href="/cv-assistant"
-              className="mt-5 inline-flex rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5"
+              className="mt-5 inline-flex rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-blue-hover"
             >
               Upload Resume
             </Link>
           </div>
 
-          {/* Links */}
           {footerLinks.map((section) => (
             <div key={section.title}>
-              <h3 className="text-sm font-semibold text-navy">
-                {section.title}
-              </h3>
+              <h3 className="text-sm font-semibold text-navy">{section.title}</h3>
 
               <ul className="mt-4 space-y-3">
                 {section.links.map((link) => (
                   <li key={link.name}>
                     <Link
                       href={link.href}
-                      className="text-sm text-text-muted hover:text-brand-blue transition-colors duration-300"
+                      className="text-sm text-text-muted transition-colors duration-300 hover:text-brand-blue"
                     >
                       {link.name}
                     </Link>
@@ -91,25 +86,22 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Bottom */}
-        <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-text-muted">
-            © {year} Career Forge. All rights reserved.
-          </p>
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 sm:flex-row">
+          <p className="text-sm text-text-muted">(c) {year} Career Forge. All rights reserved.</p>
 
           <div className="flex items-center gap-5">
             <Link
-              href="/terms"
-              className="text-sm text-text-muted hover:text-brand-blue transition-colors duration-300"
+              href="/progress"
+              className="text-sm text-text-muted transition-colors duration-300 hover:text-brand-blue"
             >
-              Terms
+              Progress
             </Link>
 
             <Link
-              href="/privacy"
-              className="text-sm text-text-muted hover:text-brand-blue transition-colors duration-300"
+              href="/quiz"
+              className="text-sm text-text-muted transition-colors duration-300 hover:text-brand-blue"
             >
-              Privacy
+              Practice
             </Link>
           </div>
         </div>
