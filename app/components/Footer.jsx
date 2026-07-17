@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 // The footer mirrors the platform information architecture so users always have
@@ -42,9 +43,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-1">
             <Link href="/" className="group flex w-fit items-center gap-3">
-              <img
+              <Image
                 src="/career-forge-logo.png"
                 alt="Career Forge Logo"
+                width={40}
+                height={40}
                 className="h-10 w-10 object-contain transition-transform duration-300 group-hover:scale-105"
               />
 

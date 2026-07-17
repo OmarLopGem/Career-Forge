@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import ToolPreviewCarousel from './components/ToolPreviewCarousel'
 import { getCurrentUserFromRequest } from '@/lib/server/auth/current-user.js'
@@ -92,7 +93,6 @@ export default async function Home() {
   ]
 
   return (
-    
     <div className="bg-background">
       <section className="max-w-7xl mx-auto px-6 py-20 md:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
@@ -135,9 +135,11 @@ export default async function Home() {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="h-14 w-14 rounded-2xl bg-blue-soft flex items-center justify-center">
-                    <img
+                    <Image
                       src="/career-forge-logo.png"
                       alt="Career Forge Logo"
+                      width={40}
+                      height={40}
                       className="h-10 w-10 object-contain"
                     />
                   </div>

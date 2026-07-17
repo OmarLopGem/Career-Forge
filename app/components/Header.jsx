@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { requestJsonWithoutBody } from "@/lib/job-tracker/client/api.js";
@@ -125,9 +126,11 @@ export default function Header({ currentUser = null }) {
             className="flex items-center gap-3 group"
             onClick={() => setIsOpen(false)}
           >
-            <img
+            <Image
               src="/career-forge-logo.png"
               alt="Career Forge Logo"
+              width={44}
+              height={44}
               className="h-10 w-10 sm:h-11 sm:w-11 object-contain translate-y-[1px] transition-transform duration-300 group-hover:scale-105"
             />
 
