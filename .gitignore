@@ -43,3 +43,5 @@ next-env.d.ts
 # vitest
 coverage
 .vitest
+# Local Pi runtime state
+.atl/
