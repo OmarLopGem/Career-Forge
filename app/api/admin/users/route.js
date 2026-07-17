@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server'
-import {
-  serviceCreateAdminUser,
-  serviceListAdminUsers,
-} from '@/lib/server/admin/admin-users.service.js'
+import { serviceCreateAdminUser,serviceListAdminUsers } from '@/lib/server/admin/admin-users.service.js'
 import { toApiErrorResponse } from '@/lib/server/api-error.js'
 
 export const runtime = 'nodejs'
