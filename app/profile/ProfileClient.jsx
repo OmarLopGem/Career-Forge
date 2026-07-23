@@ -47,12 +47,18 @@ function getCompletionTone(score) {
   return 'text-forge-orange'
 }
 
-export default function ProfileClient({ currentUser, initialAccount, initialProfiles }) {
+export default function ProfileClient({
+  currentUser,
+  initialAccount,
+  initialProfiles,
+  initialWarnings = [],
+}) {
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [account, setAccount] = useState(initialAccount)
   const [profiles] = useState(initialProfiles)
+  const [warnings] = useState(initialWarnings)
   const [form, setForm] = useState(() => createFormState(initialAccount, currentUser))
 
   const defaultProfile = useMemo(
@@ -84,6 +90,28 @@ export default function ProfileClient({ currentUser, initialAccount, initialProf
   return (
     <main className="min-h-screen bg-background px-6 py-10">
       <div className="mx-auto max-w-6xl space-y-8">
+        {warnings.length > 0 ? (
+          <section
+            aria-label="Account notices"
+            className="rounded-[2rem] border border-forge-orange bg-orange-soft p-6 shadow-sm"
+          >
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-forge-orange">
+              Account notices
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-navy">Action may be required</h2>
+            <div className="mt-5 space-y-3">
+              {warnings.map((warning) => (
+                <article key={warning._id} className="rounded-2xl border border-forge-orange/30 bg-surface p-4">
+                  <p className="text-sm leading-6 text-text-main">{warning.message}</p>
+                  <p className="mt-2 text-xs font-medium text-text-muted">
+                    Sent {formatDate(warning.createdAt)}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
           <div className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
             <div>

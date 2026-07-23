@@ -15,7 +15,8 @@ const defaultForm = {
 const STATUS_LABELS = {
   active: 'Active',
   pending: 'Pending',
-  blocked: 'Inactive',
+  blocked: 'Suspended',
+  deleted: 'Deleted',
 }
 
 // This client owns admin-side pagination, optimistic updates, and manual user
@@ -54,6 +55,29 @@ function StatusPill({ status }) {
       {label}
     </span>
   )
+}
+
+function WarningPill({ count }) {
+  const reachedLimit = count >= 2
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
+        reachedLimit
+          ? 'border-forge-orange bg-orange-soft text-forge-orange'
+          : count > 0
+            ? 'border-brand-blue bg-blue-soft text-brand-blue'
+            : 'border-border bg-background text-text-muted'
+      }`}
+    >
+      {count}/2 warnings
+    </span>
+  )
+}
+
+function formatDate(value) {
+  if (!value) return 'Not available'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString()
 }
 
 function PageIndicator({ page, totalPages }) {
@@ -195,18 +219,25 @@ export default function AdminUsersClient({
   initialUsers,
   initialPagination,
   initialQuery = '',
+  currentUserId,
+  initialRestrictedUsers = [],
+  initialWarningUsers = [],
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [users, setUsers] = useState(initialUsers)
+  const [restrictedUsers, setRestrictedUsers] = useState(initialRestrictedUsers)
+  const [warningUsers, setWarningUsers] = useState(initialWarningUsers)
   const [pagination, setPagination] = useState(
     initialPagination ?? { page: 1, pageSize: 10, total: initialUsers.length, totalPages: 1 },
   )
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [pendingStatusIds, setPendingStatusIds] = useState(() => new Set())
+  const [pendingUserIds, setPendingUserIds] = useState(() => new Set())
   const [formData, setFormData] = useState(defaultForm)
+  const [warningTarget, setWarningTarget] = useState(null)
+  const [warningMessage, setWarningMessage] = useState('')
   const [searchInput, setSearchInput] = useState(initialQuery)
   const [query, setQuery] = useState(initialQuery)
   const queryRef = useRef(query)
@@ -283,6 +314,19 @@ export default function AdminUsersClient({
     },
     [buildApiUrl, page, pagination.pageSize, query],
   )
+
+  const refreshAdminSections = useCallback(async () => {
+    try {
+      const [restricted, warnings] = await Promise.all([
+        requestJson('/api/admin/users/restricted'),
+        requestJson('/api/admin/users/warnings'),
+      ])
+      setRestrictedUsers(restricted.users ?? [])
+      setWarningUsers(warnings.users ?? [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to refresh account records.')
+    }
+  }, [])
 
   const applyQueryChange = useCallback(
     (nextValue) => {
@@ -378,7 +422,7 @@ export default function AdminUsersClient({
   }
 
   const setPendingFor = useCallback((userId, isPending) => {
-    setPendingStatusIds((current) => {
+    setPendingUserIds((current) => {
       const next = new Set(current)
       if (isPending) {
         next.add(userId)
@@ -389,6 +433,72 @@ export default function AdminUsersClient({
     })
   }, [])
 
+  const handleDeleteUser = useCallback(
+    async (user) => {
+      if (user._id === currentUserId) return
+
+      if (typeof window !== 'undefined') {
+        const confirmed = window.confirm(
+          `Permanently delete ${user.email} and their Career Forge data? This cannot be undone.`,
+        )
+        if (!confirmed) return
+      }
+
+      setError('')
+      setMessage('')
+      setPendingFor(user._id, true)
+
+      try {
+        await requestJson(`/api/admin/users/${encodeURIComponent(user._id)}`, {
+          method: 'DELETE',
+        })
+        setMessage(`${user.email} was moved to the deleted-access register.`)
+        await loadUsers(page, query)
+        await refreshAdminSections()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete user.')
+      } finally {
+        setPendingFor(user._id, false)
+      }
+    },
+    [currentUserId, loadUsers, page, query, refreshAdminSections, setPendingFor],
+  )
+
+  const handleWarningSubmit = useCallback(
+    async (event) => {
+      event.preventDefault()
+      if (!warningTarget) return
+
+      setError('')
+      setMessage('')
+      setPendingFor(warningTarget._id, true)
+
+      try {
+        const result = await requestJson(
+          `/api/admin/users/${encodeURIComponent(warningTarget._id)}/warnings`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ message: warningMessage }),
+          },
+        )
+        setMessage(
+          result.action === 'suspended'
+            ? `${warningTarget.email} reached the warning limit and was suspended.`
+            : `Warning ${result.warningCount}/2 sent to ${warningTarget.email}.`,
+        )
+        setWarningTarget(null)
+        setWarningMessage('')
+        await loadUsers(page, query)
+        await refreshAdminSections()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to send warning.')
+      } finally {
+        setPendingFor(warningTarget._id, false)
+      }
+    },
+    [loadUsers, page, query, refreshAdminSections, setPendingFor, warningMessage, warningTarget],
+  )
+
   const toggleUserStatus = useCallback(
     async (user, targetStatus) => {
       const userId = user._id
@@ -397,7 +507,7 @@ export default function AdminUsersClient({
       if (typeof window !== 'undefined') {
         const confirmationMessage =
           targetStatus === 'blocked'
-            ? `Deactivate ${user.email}? They'll be signed out immediately.`
+            ? `Suspend ${user.email}? They'll be signed out immediately.`
             : `Activate ${user.email}? They'll regain access to Career Forge.`
         const confirmed = window.confirm(confirmationMessage)
         if (!confirmed) return
@@ -431,9 +541,11 @@ export default function AdminUsersClient({
         }
         setMessage(
           targetStatus === 'blocked'
-            ? `${user.email} is now inactive.`
+            ? `${user.email} is now suspended.`
             : `${user.email} is now active.`,
         )
+        await loadUsers(page, query)
+        await refreshAdminSections()
       } catch (err) {
         setUsers((current) =>
           current.map((entry) =>
@@ -445,49 +557,63 @@ export default function AdminUsersClient({
         setPendingFor(userId, false)
       }
     },
-    [setPendingFor],
+    [loadUsers, page, query, refreshAdminSections, setPendingFor],
   )
 
   const renderAction = useCallback(
     (user) => {
-      if (user.status === 'pending') {
-        return (
-          <span className="inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
-            Pending
-          </span>
-        )
-      }
-
-      const isPending = pendingStatusIds.has(user._id)
+      const isPending = pendingUserIds.has(user._id)
       const isActive = user.status === 'active'
 
-      if (isActive) {
-        return (
+      return (
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => toggleUserStatus(user, 'blocked')}
+            onClick={() => toggleUserStatus(user, isActive ? 'blocked' : 'active')}
             disabled={isPending}
-            aria-label={`Deactivate ${user.email}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-forge-orange bg-white px-3 py-1.5 text-xs font-semibold text-forge-orange transition hover:bg-orange-soft disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label={`${isActive ? 'Suspend' : 'Activate'} ${user.email}`}
+            className={`inline-flex items-center gap-1.5 rounded-lg border-2 px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+              isActive
+                ? 'border-forge-orange bg-white text-forge-orange hover:bg-orange-soft'
+                : 'border-success-green bg-success-green text-white hover:opacity-90'
+            }`}
           >
-            {isPending ? '…' : 'Deactivate'}
+            {isPending ? '…' : isActive ? 'Suspend' : 'Activate'}
           </button>
-        )
-      }
-
-      return (
-        <button
-          type="button"
-          onClick={() => toggleUserStatus(user, 'active')}
-          disabled={isPending}
-          aria-label={`Activate ${user.email}`}
-          className="inline-flex items-center gap-1.5 rounded-lg border-2 border-success-green bg-success-green px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? '…' : 'Activate'}
-        </button>
+          {user.warningCount >= 2 ? (
+            <button
+              type="button"
+              onClick={() => toggleUserStatus(user, 'blocked')}
+              disabled={isPending || user._id === currentUserId}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-forge-orange bg-orange-soft px-3 py-1.5 text-xs font-semibold text-forge-orange transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Suspend (limit)
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setWarningTarget(user)
+                setWarningMessage('')
+              }}
+              disabled={isPending || user._id === currentUserId}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-brand-blue bg-white px-3 py-1.5 text-xs font-semibold text-brand-blue transition hover:bg-blue-soft disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Warn ({user.warningCount}/2)
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => handleDeleteUser(user)}
+            disabled={isPending || user._id === currentUserId}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-red-500 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Delete
+          </button>
+        </div>
       )
     },
-    [pendingStatusIds, toggleUserStatus],
+    [currentUserId, handleDeleteUser, pendingUserIds, toggleUserStatus],
   )
 
   const isSearching = query.trim().length > 0
@@ -499,7 +625,7 @@ export default function AdminUsersClient({
         return (
           <tr>
             <td
-              colSpan={5}
+              colSpan={6}
               className="p-8 text-center text-sm text-text-muted"
             >
               <div className="flex flex-col items-center gap-2">
@@ -526,7 +652,7 @@ export default function AdminUsersClient({
       return (
         <tr>
           <td
-            colSpan={5}
+            colSpan={6}
             className="p-8 text-center text-sm text-text-muted"
           >
             No users yet. Add your first account using the form above.
@@ -544,6 +670,9 @@ export default function AdminUsersClient({
         <td className="p-3 capitalize">{user.role}</td>
         <td className="p-3">
           <StatusPill status={user.status} />
+        </td>
+        <td className="p-3">
+          <WarningPill count={user.warningCount ?? 0} />
         </td>
         <td className="p-3">{renderAction(user)}</td>
       </tr>
@@ -653,6 +782,7 @@ export default function AdminUsersClient({
                   <th className="p-3">Email</th>
                   <th className="p-3">Role</th>
                   <th className="p-3">Status</th>
+                  <th className="p-3">Warnings</th>
                   <th className="p-3">Actions</th>
                 </tr>
               </thead>
@@ -690,6 +820,159 @@ export default function AdminUsersClient({
           </div>
         </div>
       </div>
+
+      <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-forge-orange/40 bg-surface p-6 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-forge-orange">
+              Access register
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-navy">Suspended and deleted accounts</h2>
+            <p className="mt-2 text-sm text-text-muted">
+              These accounts cannot access Career Forge. Deleted accounts remain here for audit purposes.
+            </p>
+          </div>
+          <span className="rounded-full bg-orange-soft px-3 py-1 text-sm font-semibold text-forge-orange">
+            {restrictedUsers.length} restricted
+          </span>
+        </div>
+
+        {restrictedUsers.length === 0 ? (
+          <p className="mt-6 rounded-xl border border-dashed border-border bg-background p-5 text-sm text-text-muted">
+            No suspended or deleted accounts.
+          </p>
+        ) : (
+          <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+            <table className="w-full border-collapse bg-white text-left text-sm">
+              <thead className="bg-orange-soft">
+                <tr>
+                  <th className="p-3">Name</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Role</th>
+                  <th className="p-3">Access status</th>
+                  <th className="p-3">Warnings</th>
+                </tr>
+              </thead>
+              <tbody>
+                {restrictedUsers.map((user) => (
+                  <tr key={user._id} className="border-t border-border">
+                    <td className="p-3">{user.firstName} {user.lastName}</td>
+                    <td className="p-3">{user.email}</td>
+                    <td className="p-3 capitalize">{user.role}</td>
+                    <td className="p-3"><StatusPill status={user.status} /></td>
+                    <td className="p-3"><WarningPill count={user.warningCount ?? 0} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-brand-blue/30 bg-surface p-6 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-blue">
+              Warning register
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-navy">Warned accounts</h2>
+            <p className="mt-2 text-sm text-text-muted">
+              Each account can receive two warnings. The second warning automatically removes access.
+            </p>
+          </div>
+          <span className="rounded-full bg-blue-soft px-3 py-1 text-sm font-semibold text-brand-blue">
+            {warningUsers.length} warned
+          </span>
+        </div>
+
+        {warningUsers.length === 0 ? (
+          <p className="mt-6 rounded-xl border border-dashed border-border bg-background p-5 text-sm text-text-muted">
+            No warnings have been issued.
+          </p>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {warningUsers.map((user) => (
+              <article key={user._id} className="rounded-xl border border-border bg-background p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-bold text-navy">{user.firstName} {user.lastName}</h3>
+                      <StatusPill status={user.status} />
+                      <WarningPill count={user.warningCount} />
+                    </div>
+                    <p className="mt-1 text-sm text-text-muted">{user.email}</p>
+                    <p className="mt-3 text-sm leading-6 text-text-main">{user.latestWarning}</p>
+                  </div>
+                  <p className="shrink-0 text-xs font-medium text-text-muted">
+                    Last warned {formatDate(user.lastWarnedAt)}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {warningTarget ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-navy/45 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="warning-dialog-title"
+        >
+          <form
+            onSubmit={handleWarningSubmit}
+            className="w-full max-w-lg rounded-3xl border border-border bg-surface p-6 shadow-xl"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-forge-orange">
+              Account warning
+            </p>
+            <h2 id="warning-dialog-title" className="mt-2 text-2xl font-bold text-navy">
+              Warn {warningTarget.firstName} {warningTarget.lastName}
+            </h2>
+            <p className="mt-2 text-sm text-text-muted">
+              This notice will appear on the user&apos;s Profile Hub. A second warning automatically suspends access.
+            </p>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-semibold text-navy">Message</span>
+              <textarea
+                required
+                minLength={5}
+                maxLength={500}
+                value={warningMessage}
+                onChange={(event) => setWarningMessage(event.target.value)}
+                placeholder="Explain the issue and any next steps."
+                className="mt-2 min-h-32 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none transition focus:border-brand-blue"
+              />
+            </label>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setWarningTarget(null)
+                  setWarningMessage('')
+                }}
+                className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-text-muted transition hover:bg-background"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={pendingUserIds.has(warningTarget._id)}
+                className="rounded-xl bg-forge-orange px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+              >
+                {pendingUserIds.has(warningTarget._id)
+                  ? 'Sending...'
+                  : warningTarget.warningCount === 1
+                    ? 'Send final warning'
+                    : 'Send warning'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </main>
   )
 }

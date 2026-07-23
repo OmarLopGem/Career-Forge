@@ -1,7 +1,11 @@
 import { redirect } from 'next/navigation'
 import AdminUsersClient from './AdminUsersClient.jsx'
 import { getCurrentUserFromRequest } from '@/lib/server/auth/current-user.js'
-import { serviceListAdminUsers } from '@/lib/server/admin/admin-users.service.js'
+import {
+  serviceListAdminRestrictedUsers,
+  serviceListAdminUsers,
+  serviceListAdminWarningUsers,
+} from '@/lib/server/admin/admin-users.service.js'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,16 +30,23 @@ export default async function AdminUsersPage({ searchParams }) {
   const resolvedSearchParams = await searchParams
   const page = parsePositiveInt(resolvedSearchParams?.page)
   const q = resolvedSearchParams?.q
-  const { users, pagination } = await serviceListAdminUsers({
-    page,
-    query: typeof q === 'string' ? q : undefined,
-  })
+  const [{ users, pagination }, { users: restrictedUsers }, { users: warningUsers }] = await Promise.all([
+    serviceListAdminUsers({
+      page,
+      query: typeof q === 'string' ? q : undefined,
+    }),
+    serviceListAdminRestrictedUsers(),
+    serviceListAdminWarningUsers(),
+  ])
 
   return (
     <AdminUsersClient
       initialUsers={users}
       initialPagination={pagination}
       initialQuery={typeof q === 'string' ? q : ''}
+      currentUserId={currentUser._id}
+      initialRestrictedUsers={restrictedUsers}
+      initialWarningUsers={warningUsers}
     />
   )
 }

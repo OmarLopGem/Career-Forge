@@ -1,6 +1,7 @@
 import { MongoClient, ObjectId } from 'mongodb'
 import { loadProjectEnv } from '../lib/server/load-env-file.mjs'
 import { quizData } from '../app/quiz/seedQuestions.js'
+import { getQuizDifficulty } from '../lib/server/quiz/quiz-question.repository.js'
 
 loadProjectEnv()
 
@@ -15,6 +16,7 @@ function flattenQuizQuestions() {
       questions.push({
         jobType,
         type: entry.type,
+        difficulty: getQuizDifficulty(entry),
         question: entry.question,
         options: entry.options ?? [],
         answer: entry.answer,

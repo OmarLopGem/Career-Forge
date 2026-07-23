@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { requestJson } from "@/lib/job-tracker/client/api.js";
 
 // The quiz page is intentionally self-contained for now: it loads question sets
 // by job type, tracks temporary answers in memory, and derives feedback locally.
@@ -18,9 +19,15 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState({});
   const [score, setScore] = useState(null);
   const [correctCount, setCorrectCount] = useState(0);
+  const [totalMarks, setTotalMarks] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [passed, setPassed] = useState(false);
+  const [questionResults, setQuestionResults] = useState({});
   const [feedback, setFeedback] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadQuestions() {
@@ -49,8 +56,13 @@ export default function QuizPage() {
     setAnswers({});
     setScore(null);
     setCorrectCount(0);
+    setTotalMarks(0);
+    setTotalQuestions(0);
+    setPassed(false);
+    setQuestionResults({});
     setFeedback("");
     setShowResult(false);
+    setError("");
   };
 
   const handleAnswerChange = (questionId, value) => {
@@ -60,64 +72,69 @@ export default function QuizPage() {
     });
   };
 
-  const normalize = (text) => {
-    return text.toString().trim().toLowerCase();
+  const getDifficulty = (question) => {
+    if (question.difficulty) return question.difficulty;
+    if (question.type === "short") return "Advanced";
+    if (question.type === "blank") return "Intermediate";
+    return "Beginner";
   };
 
-  const isAnswerCorrect = (question, userAnswer) => {
-    if (!userAnswer) return false;
-
-    const correctAnswer = normalize(question.answer);
-    const givenAnswer = normalize(userAnswer);
-
-    if (question.type === "short") {
-      return givenAnswer.includes(correctAnswer);
-    }
-
-    return givenAnswer === correctAnswer;
+  const difficultyStyles = {
+    Beginner: "bg-[var(--cyan-soft)] text-[var(--success-green)]",
+    Intermediate: "bg-[var(--orange-soft)] text-[var(--forge-orange)]",
+    Advanced: "bg-[var(--blue-soft)] text-[var(--brand-blue)]",
   };
 
-  const getAIFeedback = (finalScore, selectedJob) => {
-    if (finalScore < 5) {
-      return `AI Feedback: You need more practice for the ${selectedJob} role. Review the basic concepts first, then retake the quiz.`;
+  const submitQuiz = async () => {
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const result = await requestJson("/api/quiz/submit", {
+        method: "POST",
+        body: JSON.stringify({ jobType, answers }),
+      });
+      setCorrectCount(result.correctCount);
+      setTotalQuestions(result.totalQuestions);
+      setScore(result.score);
+      setTotalMarks(result.totalMarks);
+      setPassed(result.passed);
+      setFeedback(result.feedback);
+      setQuestionResults(
+        Object.fromEntries(
+          result.questionResults.map((questionResult) => [
+            questionResult.questionId,
+            questionResult,
+          ]),
+        ),
+      );
+      setShowResult(true);
+
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }, 100);
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to submit the quiz.",
+      );
+    } finally {
+      setSubmitting(false);
     }
-
-    if (finalScore < 7) {
-      return `AI Feedback: You are close to passing for the ${selectedJob} role. Focus on the questions you missed and retake the quiz today.`;
-    }
-
-    return `AI Feedback: Strong performance for the ${selectedJob} role. You showed good interview readiness. Keep practicing advanced questions.`;
-  };
-
-  const submitQuiz = () => {
-    let totalCorrect = 0;
-
-    questions.forEach((q) => {
-      const userAnswer = answers[q._id];
-
-      if (isAnswerCorrect(q, userAnswer)) {
-        totalCorrect++;
-      }
-    });
-
-    const finalScore = totalCorrect * 0.5;
-
-    setCorrectCount(totalCorrect);
-    setScore(finalScore);
-    setFeedback(getAIFeedback(finalScore, jobType));
-    setShowResult(true);
-
-    setTimeout(() => {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-    }, 100);
   };
 
   const retakeQuiz = () => {
     setAnswers({});
     setScore(null);
     setCorrectCount(0);
+    setTotalMarks(0);
+    setTotalQuestions(0);
+    setPassed(false);
+    setQuestionResults({});
     setFeedback("");
     setShowResult(false);
+    setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -129,8 +146,8 @@ export default function QuizPage() {
         </h1>
 
         <p className="mt-2 text-[var(--text-muted)]">
-          Select a job type and complete 20 interview questions. Total marks:
-          10. Passing score: 7/10.
+          Select a job type and complete its interview questions. Your result is
+          calculated securely and saved to your account. Passing score: 70%.
         </p>
 
         <div className="mt-6">
@@ -157,7 +174,8 @@ export default function QuizPage() {
             one-line answers.
           </p>
           <p className="mt-1">
-            <strong>Marking:</strong> 20 questions × 0.5 marks = 10 marks.
+            <strong>Marking:</strong> Each question may have a different mark value.
+            Your final score is calculated from the full question set.
           </p>
         </div>
 
@@ -186,13 +204,18 @@ export default function QuizPage() {
                       Q{index + 1}. {q.question}
                     </h2>
 
-                    <span className="shrink-0 rounded-full bg-[var(--orange-soft)] px-3 py-1 text-sm font-medium text-[var(--forge-ornage)]">
-                      {q.type === "mcq"
-                        ? "MCQ"
-                        : q.type === "blank"
-                        ? "Blank"
-                        : "One Line"}
-                    </span>
+                    <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                      <span className={`rounded-full px-3 py-1 text-sm font-medium ${difficultyStyles[getDifficulty(q)]}`}>
+                        {getDifficulty(q)}
+                      </span>
+                      <span className="rounded-full bg-[var(--orange-soft)] px-3 py-1 text-sm font-medium text-[var(--forge-orange)]">
+                        {q.type === "mcq"
+                          ? "MCQ"
+                          : q.type === "blank"
+                          ? "Blank"
+                          : "One Line"}
+                      </span>
+                    </div>
                   </div>
 
                   {q.type === "mcq" ? (
@@ -235,13 +258,13 @@ export default function QuizPage() {
 
                   {showResult && (
                     <div className="mt-4 rounded-lg bg-[var(--cyan-soft)] p-3">
-                      {isAnswerCorrect(q, answers[q._id]) ? (
+                      {questionResults[q._id]?.correct ? (
                         <p className="font-medium text-[var(--success-green)]">
                           Correct
                         </p>
                       ) : (
-                        <p className="font-medium text-[var(--forge-ornage)]">
-                          Incorrect. Correct answer: {q.answer}
+                        <p className="font-medium text-[var(--forge-orange)]">
+                          Incorrect. Correct answer: {questionResults[q._id]?.correctAnswer ?? q.answer}
                         </p>
                       )}
                     </div>
@@ -253,12 +276,19 @@ export default function QuizPage() {
             {!showResult && (
               <button
                 onClick={submitQuiz}
+                disabled={submitting}
                 className="mt-8 rounded-xl bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
               >
-                Submit Quiz
+                {submitting ? "Calculating..." : "Submit Quiz"}
               </button>
             )}
           </>
+        )}
+
+        {error && (
+          <p className="mt-6 rounded-xl bg-red-50 px-4 py-3 font-medium text-red-600">
+            {error}
+          </p>
         )}
 
         {showResult && (
@@ -268,16 +298,16 @@ export default function QuizPage() {
             </h2>
 
             <p className="mt-3 text-xl font-semibold text-[var(--text-main)]">
-              Correct Answers: {correctCount}/20
+              Correct Answers: {correctCount}/{totalQuestions}
             </p>
 
             <p className="mt-1 text-xl font-semibold text-[var(--text-main)]">
-              Score: {score}/10
+              Score: {score}/{totalMarks}
             </p>
 
-            {score < 7 ? (
-              <p className="mt-2 font-semibold text-[var(--forge-ornage)]">
-                Score below 7. You can retake this quiz today.
+            {!passed ? (
+              <p className="mt-2 font-semibold text-[var(--forge-orange)]">
+                Score below 70%. You can retake this quiz today.
               </p>
             ) : (
               <p className="mt-2 font-semibold text-[var(--success-green)]">
@@ -287,7 +317,7 @@ export default function QuizPage() {
 
             <p className="mt-4 text-[var(--text-muted)]">{feedback}</p>
 
-            {score < 7 && (
+            {!passed && (
               <button
                 onClick={retakeQuiz}
                 className="mt-5 rounded-xl px-6 py-3 font-medium text-white"
