@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
+import StreakBadge from './components/StreakBadge.jsx'
 
 const jobTypes = [
   'Frontend Developer',
@@ -137,12 +138,16 @@ export default function QuizClient() {
   return (
     <main className="min-h-screen bg-background px-6 py-10">
       <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
-        <h1 className="text-4xl font-bold text-navy">AI Interview Quiz</h1>
-
-        <p className="mt-2 text-text-muted">
-          Select a job type and complete its interview questions. Your result is
-          calculated securely and saved to your account. Passing score: 70%.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-navy">AI Interview Quiz</h1>
+            <p className="mt-2 max-w-2xl text-text-muted">
+              Select a job type and complete its interview questions. Your result is
+              calculated securely and saved to your account. Passing score: 70%.
+            </p>
+          </div>
+          <StreakBadge className="min-w-[220px]" />
+        </div>
 
         <div className="mt-6">
           <label className="font-semibold text-text-main">Select Job Type</label>

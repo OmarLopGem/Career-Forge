@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { useEffect, useState } from 'react'
 
 // Each professional profile keeps its own summary so users can tailor how they
 // present themselves for different roles without changing account-level data.
@@ -8,6 +10,11 @@ export default function ProfessionalSummaryForm({ profile, onSave }) {
   const [summary, setSummary] = useState(profile.professionalSummary ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    setSummary(profile.professionalSummary ?? '')
+    setSaved(false)
+  }, [profile._id, profile.professionalSummary])
 
   async function handleSubmit(event) {
     event.preventDefault()

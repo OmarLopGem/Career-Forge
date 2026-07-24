@@ -14,7 +14,19 @@ export async function POST(request) {
         { status: 400 },
       )
     }
-    const title = formData.get('title')
+    const titleRaw = formData.get('title')
+    const title = typeof titleRaw === 'string' ? titleRaw.trim() : ''
+    if (title.length < 3 || title.length > 80) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'INVALID_TITLE',
+            message: 'A profile name between 3 and 80 characters is required.',
+          },
+        },
+        { status: 400 },
+      )
+    }
     const desiredRole = formData.get('desiredRole')
     const target = desiredRole ? { desiredRole: String(desiredRole) } : undefined
     const buffer = new Uint8Array(await file.arrayBuffer())
@@ -22,7 +34,7 @@ export async function POST(request) {
       fileName: file.name,
       mimeType: file.type,
       buffer,
-      title: title ? String(title) : undefined,
+      title,
       target,
     })
     return NextResponse.json(result, { status: 201 })
