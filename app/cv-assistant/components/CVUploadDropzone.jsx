@@ -4,6 +4,8 @@ import { useCallback, useId, useRef, useState } from 'react'
 
 const ACCEPT = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 const MAX_SIZE = 5 * 1024 * 1024
+const MIN_TITLE_LENGTH = 3
+const MAX_TITLE_LENGTH = 80
 
 // This dropzone validates the raw upload before the import flow starts so the
 // parsing hooks only receive files that the backend knows how to process.
@@ -13,7 +15,13 @@ export default function CVUploadDropzone({ onFile, disabled }) {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState(null)
   const [title, setTitle] = useState('')
+  const [titleTouched, setTitleTouched] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  const trimmedTitle = title.trim()
+  const titleError = titleTouched && trimmedTitle.length < MIN_TITLE_LENGTH
+    ? `Profile name must be at least ${MIN_TITLE_LENGTH} characters.`
+    : null
 
   const handleFile = useCallback(
     async (file) => {
@@ -31,18 +39,31 @@ export default function CVUploadDropzone({ onFile, disabled }) {
         setError('Unsupported file type. Use PDF or DOCX.')
         return
       }
+      const candidateTitle = trimmedTitle || title.trim()
+      if (candidateTitle.length < MIN_TITLE_LENGTH) {
+        setTitleTouched(true)
+        setError(`Please give this CV a profile name (at least ${MIN_TITLE_LENGTH} characters) before uploading.`)
+        return
+      }
+      if (candidateTitle.length > MAX_TITLE_LENGTH) {
+        setError(`Profile name must be ${MAX_TITLE_LENGTH} characters or fewer.`)
+        return
+      }
       setBusy(true)
       try {
-        await onFile(file)
+        await onFile(file, candidateTitle)
         setTitle('')
+        setTitleTouched(false)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Upload failed.')
       } finally {
         setBusy(false)
       }
     },
-    [onFile],
+    [onFile, trimmedTitle, title],
   )
+
+  const canUpload = trimmedTitle.length >= MIN_TITLE_LENGTH && !busy && !disabled
 
   return (
     <div className="rounded-3xl border border-border bg-surface p-6 md:p-8 shadow-sm">
@@ -75,16 +96,31 @@ export default function CVUploadDropzone({ onFile, disabled }) {
       <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
         <label className="md:col-span-1 block">
           <span className="text-xs font-semibold text-text-muted tracking-wider">
-            PROFILE NAME
+            PROFILE NAME <span className="text-forge-orange">*</span>
           </span>
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              if (!titleTouched) setTitleTouched(true)
+            }}
+            onBlur={() => setTitleTouched(true)}
             placeholder="e.g. Frontend Engineer Profile"
+            aria-required="true"
+            aria-invalid={Boolean(titleError)}
+            maxLength={MAX_TITLE_LENGTH}
             className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition"
             disabled={busy || disabled}
           />
+          <p className="mt-1 text-xs text-text-muted">
+            Required, {MIN_TITLE_LENGTH}-{MAX_TITLE_LENGTH} characters.
+          </p>
+          {titleError ? (
+            <p className="mt-1 text-xs text-forge-orange" data-testid="title-error">
+              {titleError}
+            </p>
+          ) : null}
         </label>
 
         <div
@@ -93,7 +129,7 @@ export default function CVUploadDropzone({ onFile, disabled }) {
             isDragging
               ? 'border-brand-blue bg-blue-soft'
               : 'border-border bg-background hover:border-brand-blue/60',
-            busy || disabled ? 'opacity-60' : '',
+            busy || disabled || !canUpload ? 'opacity-60' : '',
           ].join(' ')}
           onDragOver={(e) => {
             e.preventDefault()
@@ -103,6 +139,11 @@ export default function CVUploadDropzone({ onFile, disabled }) {
           onDrop={(e) => {
             e.preventDefault()
             setIsDragging(false)
+            if (!canUpload) {
+              setTitleTouched(true)
+              setError(`Please give this CV a profile name (at least ${MIN_TITLE_LENGTH} characters) before uploading.`)
+              return
+            }
             const file = e.dataTransfer.files?.[0]
             if (file) void handleFile(file)
           }}
@@ -127,7 +168,7 @@ export default function CVUploadDropzone({ onFile, disabled }) {
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            disabled={busy || disabled}
+            disabled={!canUpload}
             className="mt-2 inline-flex items-center justify-center rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-brand-blue-hover hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {busy ? 'Parsing…' : 'Browse files'}

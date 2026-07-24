@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { useEffect, useState } from 'react'
 
 const SENIORITY_OPTIONS = [
   { value: 'intern', label: 'Intern' },
@@ -17,6 +19,11 @@ export default function TargetRoleForm({ profile, onSave }) {
   const [target, setTarget] = useState(profile.target ?? {})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    setTarget(profile.target ?? {})
+    setSaved(false)
+  }, [profile._id, profile.target])
 
   async function handleSubmit(e) {
     e.preventDefault()

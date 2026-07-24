@@ -224,6 +224,7 @@ export default function CVAssistantClient() {
           <div className="space-y-6">
             <ProfileCompletionCard completion={profile.completion} />
             <PersonalInfoForm
+              key={`${profile._id}-personal`}
               profile={profile}
               onSave={handleSavePersonalInfo}
             />
@@ -232,7 +233,11 @@ export default function CVAssistantClient() {
               profile={profile}
               onSave={handleSaveProfessionalSummary}
             />
-            <TargetRoleForm profile={profile} onSave={handleSaveTarget} />
+            <TargetRoleForm
+              key={`${profile._id}-target`}
+              profile={profile}
+              onSave={handleSaveTarget}
+            />
             <StepActions
               previous={previous}
               next={

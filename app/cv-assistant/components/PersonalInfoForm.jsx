@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { useEffect, useState } from 'react'
 
 // Personal info is edited as a focused sub-form so profile refreshes can happen
 // independently from the rest of the CV assistant state.
@@ -8,6 +10,11 @@ export default function PersonalInfoForm({ profile, onSave }) {
   const [info, setInfo] = useState(profile.personalInfo)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    setInfo(profile.personalInfo)
+    setSaved(false)
+  }, [profile._id, profile.personalInfo])
 
   async function handleSubmit(e) {
     e.preventDefault()
