@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUserFromRequest } from '@/lib/server/auth/current-user.js'
 import { serviceGetProgressOverview } from '@/lib/server/progress/progress.service.js'
+import StreakBadgeServer from '@/app/quiz/components/StreakBadgeServer.jsx'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +35,7 @@ export default async function ProgressPage() {
   }
 
   const overview = await serviceGetProgressOverview()
-  const { summary, profileProgress, quizResults, applications } = overview
+  const { summary, profileProgress, quizResults, applications, bestByJobType } = overview
   const activeApplications = applications.filter((application) => !application.isArchived)
   const archivedApplications = applications.filter((application) => application.isArchived)
 
@@ -51,6 +52,10 @@ export default async function ProgressPage() {
           <p className="mt-3 max-w-3xl text-sm text-text-muted">
             This page only shows data scoped to your account: your CV profile progress, quiz results, and application history.
           </p>
+
+          <div className="mt-8">
+            <StreakBadgeServer />
+          </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
@@ -226,6 +231,76 @@ export default async function ProgressPage() {
               </div>
             )}
           </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
+              Best by Job Type
+            </p>
+            <h2 className="text-2xl font-bold text-navy">Your highest grades per quiz</h2>
+            <p className="text-sm text-text-muted">
+              Best percentage score across every attempt for each quiz topic.
+            </p>
+          </div>
+
+          {bestByJobType.length === 0 ? (
+            <div className="mt-6 rounded-3xl border border-dashed border-border bg-background p-8 text-center text-sm text-text-muted">
+              Complete a quiz to start tracking your best grade per topic.
+            </div>
+          ) : (
+            <ul className="mt-6 space-y-3">
+              {bestByJobType.map((entry, index) => {
+                const isTop = index === 0
+                const scoreDetail =
+                  entry.bestScore != null && entry.totalMarks != null
+                    ? `${entry.bestScore}/${entry.totalMarks} marks`
+                    : entry.bestScore != null
+                      ? `${entry.bestScore}/10 marks`
+                      : null
+                return (
+                  <li
+                    key={entry.jobType}
+                    className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border px-5 py-4 ${
+                      isTop
+                        ? 'border-success-green bg-cyan-soft'
+                        : 'border-border bg-background'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span
+                        className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
+                          isTop
+                            ? 'bg-success-green text-white'
+                            : 'bg-blue-soft text-brand-blue'
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p className="text-base font-bold text-navy">{entry.jobType}</p>
+                        <p className="mt-1 text-xs text-text-muted">
+                          {entry.attempts} attempt{entry.attempts === 1 ? '' : 's'} · last achieved{' '}
+                          {formatDate(entry.lastAchievedAt)}
+                          {scoreDetail ? ` · ${scoreDetail}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-navy">
+                        {Math.round(entry.bestPercentage)}%
+                      </span>
+                      {isTop ? (
+                        <span className="rounded-full bg-success-green px-3 py-1 text-xs font-semibold text-white">
+                          Top grade
+                        </span>
+                      ) : null}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </section>
       </div>
     </main>
