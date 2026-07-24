@@ -54,5 +54,8 @@ describe('Header', () => {
     )
 
     expect(screen.getAllByRole('link', { name: 'Admin Users' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: 'Admin Notifications' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: 'Job Listings' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: 'Quiz Library' }).length).toBeGreaterThan(0)
   })
 })

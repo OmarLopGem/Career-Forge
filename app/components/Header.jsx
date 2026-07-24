@@ -87,6 +87,14 @@ export default function Header({ currentUser = null }) {
       name: "Admin Notifications",
       href: "/admin/notifications",
     },
+    {
+      name: "Job Listings",
+      href: "/admin/job-listings",
+    },
+    {
+      name: "Quiz Library",
+      href: "/admin/quiz",
+    },
   ];
 
   const navLinks = [
