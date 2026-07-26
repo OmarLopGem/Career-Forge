@@ -15,7 +15,8 @@
     "seed:quiz": "node scripts/seed-quiz.mjs"
   },
   "dependencies": {
-    "mongodb": "^7.2.0",
+    "mongodb": "^6.21.0",
+    "mongoose": "^8.24.1",
     "next": "16.2.7",
     "openai": "^6.49.0",
     "react": "19.2.4",
