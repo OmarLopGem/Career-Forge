@@ -993,6 +993,27 @@ export default function CalendarClient({
               />
             </label>
 
+            <label className="flex items-start gap-3 rounded-2xl border border-border bg-background px-4 py-4">
+              <input
+                type="checkbox"
+                checked={eventForm.reminderEnabled}
+                onChange={(event) =>
+                  setEventForm((current) => ({
+                    ...current,
+                    reminderEnabled: event.target.checked,
+                  }))
+                }
+                aria-label="Enable reminder"
+                className="mt-1 h-4 w-4 rounded border-border text-brand-blue focus:ring-brand-blue"
+              />
+              <div>
+                <p className="text-sm font-semibold text-navy">Enable reminder</p>
+                <p className="mt-1 text-xs text-text-muted">
+                  Keep this event flagged as a reminder for follow-ups, deadlines, and interview prep.
+                </p>
+              </div>
+            </label>
+
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"

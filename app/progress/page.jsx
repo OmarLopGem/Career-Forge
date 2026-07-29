@@ -17,6 +17,18 @@ function formatDate(value) {
       })
 }
 
+function formatScore(value) {
+  if (value == null) return 'N/A'
+  return Number.isInteger(value) ? String(value) : value.toFixed(1)
+}
+
+function formatDelta(value, emptyLabel = 'No change yet') {
+  if (value == null) return emptyLabel
+  if (value === 0) return 'No change yet'
+  const prefix = value > 0 ? '+' : ''
+  return `${prefix}${formatScore(value)} pts`
+}
+
 function SummaryCard({ label, value, detail }) {
   return (
     <article className="rounded-3xl border border-border bg-background p-5">
@@ -38,6 +50,9 @@ export default async function ProgressPage() {
   const { summary, profileProgress, quizResults, applications, bestByJobType } = overview
   const activeApplications = applications.filter((application) => !application.isArchived)
   const archivedApplications = applications.filter((application) => application.isArchived)
+  const profilesWithScoreHistory = profileProgress.filter(
+    (profile) => (profile.scoreHistory?.length ?? 0) > 0,
+  )
 
   return (
     <main className="min-h-screen bg-background px-6 py-10">
@@ -50,7 +65,8 @@ export default async function ProgressPage() {
             Private progress dashboard for {currentUser.firstName}
           </h1>
           <p className="mt-3 max-w-3xl text-sm text-text-muted">
-            This page only shows data scoped to your account: your CV profile progress, quiz results, and application history.
+            This page only shows data scoped to your account: your CV profile progress, quiz
+            results, and application history.
           </p>
 
           <div className="mt-8">
@@ -91,7 +107,8 @@ export default async function ProgressPage() {
 
           {profileProgress.length === 0 ? (
             <div className="mt-6 rounded-3xl border border-dashed border-border bg-background p-8 text-center text-sm text-text-muted">
-              No professional profiles yet. Create one in CV Assistant to start tracking progress.
+              No professional profiles yet. Create one in CV Assistant to start tracking
+              progress.
             </div>
           ) : (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -123,7 +140,24 @@ export default async function ProgressPage() {
                         Latest ATS Score
                       </p>
                       <p className="mt-2 text-2xl font-bold text-navy">
-                        {profile.lastAnalysisScore ?? 'N/A'}
+                        {formatScore(profile.lastAnalysisScore)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-border bg-white px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+                        Reviews Logged
+                      </p>
+                      <p className="mt-2 text-2xl font-bold text-navy">{profile.analysisCount ?? 0}</p>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-white px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+                        Improvement
+                      </p>
+                      <p className="mt-2 text-2xl font-bold text-navy">
+                        {formatDelta(profile.improvementSinceFirst)}
                       </p>
                     </div>
                   </div>
@@ -131,6 +165,108 @@ export default async function ProgressPage() {
                   <p className="mt-4 text-sm text-text-muted">
                     Updated on {formatDate(profile.updatedAt)}.
                   </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
+              CV Grade History
+            </p>
+            <h2 className="text-2xl font-bold text-navy">How your CV grades change over time</h2>
+            <p className="text-sm text-text-muted">
+              Review every ATS score saved for your CV profiles so you can track improvement
+              across revisions.
+            </p>
+          </div>
+
+          {profilesWithScoreHistory.length === 0 ? (
+            <div className="mt-6 rounded-3xl border border-dashed border-border bg-background p-8 text-center text-sm text-text-muted">
+              No CV score history yet. Run an analysis from CV Assistant to start tracking your
+              grades over time.
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-5">
+              {profilesWithScoreHistory.map((profile) => (
+                <article key={profile._id} className="rounded-3xl border border-border bg-background p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-navy">{profile.title}</h3>
+                      <p className="mt-1 text-sm text-text-muted">
+                        {profile.targetRole || 'Target role not set yet'}
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-2xl border border-border bg-white px-4 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+                          Latest
+                        </p>
+                        <p className="mt-2 text-2xl font-bold text-navy">
+                          {formatScore(profile.lastAnalysisScore)}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-border bg-white px-4 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+                          Best
+                        </p>
+                        <p className="mt-2 text-2xl font-bold text-navy">
+                          {formatScore(profile.bestAnalysisScore)}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-border bg-white px-4 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+                          Since First Review
+                        </p>
+                        <p className="mt-2 text-2xl font-bold text-navy">
+                          {formatDelta(profile.improvementSinceFirst)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <ul className="mt-5 space-y-3">
+                    {profile.scoreHistory.map((entry, index) => {
+                      const previousScore =
+                        index > 0 ? profile.scoreHistory[index - 1].score : null
+                      const changeFromPrevious =
+                        previousScore == null
+                          ? null
+                          : Math.round((entry.score - previousScore) * 10) / 10
+
+                      return (
+                        <li
+                          key={entry._id}
+                          className="flex flex-col gap-3 rounded-2xl border border-border bg-white px-4 py-4 md:flex-row md:items-center md:justify-between"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-navy">Review {index + 1}</p>
+                            <p className="mt-1 text-xs text-text-muted">
+                              Recorded on {formatDate(entry.createdAt)}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            <div className="h-2 w-28 overflow-hidden rounded-full bg-blue-soft">
+                              <div
+                                className="h-full rounded-full bg-brand-blue"
+                                style={{ width: `${Math.max(0, Math.min(entry.score, 100))}%` }}
+                              />
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-navy">{formatScore(entry.score)}/100</p>
+                              <p className="text-xs text-text-muted">
+                                {formatDelta(changeFromPrevious, 'Starting point')}
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
                 </article>
               ))}
             </div>
@@ -166,7 +302,9 @@ export default async function ProgressPage() {
                     <p className="mt-3 text-sm text-text-main">
                       {result.correctCount}/{result.totalQuestions} correct
                     </p>
-                    <p className="mt-2 text-sm text-text-muted">{result.feedback || 'No feedback saved.'}</p>
+                    <p className="mt-2 text-sm text-text-muted">
+                      {result.feedback || 'No feedback saved.'}
+                    </p>
                   </article>
                 ))}
               </div>
@@ -280,9 +418,9 @@ export default async function ProgressPage() {
                       <div>
                         <p className="text-base font-bold text-navy">{entry.jobType}</p>
                         <p className="mt-1 text-xs text-text-muted">
-                          {entry.attempts} attempt{entry.attempts === 1 ? '' : 's'} · last achieved{' '}
+                          {entry.attempts} attempt{entry.attempts === 1 ? '' : 's'} - last achieved{' '}
                           {formatDate(entry.lastAchievedAt)}
-                          {scoreDetail ? ` · ${scoreDetail}` : ''}
+                          {scoreDetail ? ` - ${scoreDetail}` : ''}
                         </p>
                       </div>
                     </div>

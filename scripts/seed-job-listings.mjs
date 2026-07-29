@@ -1,62 +1,8 @@
-import { MongoClient, ObjectId } from 'mongodb'
-import fs from 'node:fs'
-import path from 'node:path'
-
-function parseEnvLine(line) {
-  const trimmed = line.trim()
-
-  if (!trimmed || trimmed.startsWith('#')) {
-    return null
-  }
-
-  const separatorIndex = trimmed.indexOf('=')
-
-  if (separatorIndex === -1) {
-    return null
-  }
-
-  const key = trimmed.slice(0, separatorIndex).trim()
-  let value = trimmed.slice(separatorIndex + 1).trim()
-
-  if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
-    value = value.slice(1, -1)
-  }
-
-  return { key, value }
-}
-
-function loadProjectEnv() {
-  const cwd = process.cwd()
-  const candidates = [
-    path.join(cwd, '.env.download'),
-    path.join(cwd, '.env.local'),
-    path.join(cwd, '.env'),
-  ]
-
-  for (const filePath of candidates) {
-    if (!fs.existsSync(filePath)) continue
-
-    const contents = fs.readFileSync(filePath, 'utf8')
-    const lines = contents.split(/\r?\n/)
-
-    for (const line of lines) {
-      const parsed = parseEnvLine(line)
-      if (!parsed) continue
-
-      if (process.env[parsed.key] === undefined) {
-        process.env[parsed.key] = parsed.value
-      }
-    }
-  }
-}
+import { loadProjectEnv } from '../lib/server/load-env-file.mjs'
+import { getMongooseConnection } from '../lib/db/mongoose.js'
+import { getJobListingModel } from '../lib/db/models/job-listing.js'
 
 loadProjectEnv()
-
-const uri = process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017'
-const dbName = process.env.MONGODB_DB ?? 'career_forge'
 
 const listings = [
   {
@@ -222,32 +168,18 @@ const listings = [
 ]
 
 async function seedJobListings() {
-  const client = new MongoClient(uri, {
-    serverSelectionTimeoutMS: 5000,
-    maxPoolSize: 10,
-  })
+  let connection = null
 
   try {
-    await client.connect()
-    const db = client.db(dbName)
-    const collection = db.collection('job_listings')
+    connection = await getMongooseConnection()
+    const JobListing = await getJobListingModel()
 
-    await collection.createIndexes([
-      { key: { isActive: 1, updatedAt: -1 }, name: 'job_listings_active_updated' },
-      { key: { category: 1, isActive: 1 }, name: 'job_listings_category_active' },
-      { key: { requiredSkills: 1 }, name: 'job_listings_required_skills' },
-      {
-        key: { source: 1, externalId: 1 },
-        unique: true,
-        sparse: true,
-        name: 'job_listings_source_external_id',
-      },
-    ])
+    await JobListing.createIndexes()
 
     for (const listing of listings) {
       const now = new Date().toISOString()
 
-      await collection.updateOne(
+      await JobListing.updateOne(
         { source: listing.source, externalId: listing.externalId },
         {
           $set: {
@@ -255,7 +187,6 @@ async function seedJobListings() {
             updatedAt: now,
           },
           $setOnInsert: {
-            _id: new ObjectId(),
             createdAt: now,
           },
         },
@@ -263,9 +194,11 @@ async function seedJobListings() {
       )
     }
 
-    console.log(`Seeded ${listings.length} job listings into ${dbName}.`)
+    console.log(`Seeded ${listings.length} job listings into ${connection.name}.`)
   } finally {
-    await client.close()
+    if (connection) {
+      await connection.close()
+    }
   }
 }
 

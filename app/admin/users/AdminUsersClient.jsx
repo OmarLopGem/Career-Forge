@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
@@ -567,6 +568,12 @@ export default function AdminUsersClient({
 
       return (
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/users/${encodeURIComponent(user._id)}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-navy transition hover:border-brand-blue hover:text-brand-blue"
+          >
+            View profile
+          </Link>
           <button
             type="button"
             onClick={() => toggleUserStatus(user, isActive ? 'blocked' : 'active')}

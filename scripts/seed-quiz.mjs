@@ -1,12 +1,10 @@
-import { MongoClient, ObjectId } from 'mongodb'
 import { loadProjectEnv } from '../lib/server/load-env-file.mjs'
+import { getMongooseConnection } from '../lib/db/mongoose.js'
+import { getQuizQuestionModel } from '../lib/db/models/quiz-question.js'
 import { quizData } from '../app/quiz/seedQuestions.js'
 import { getQuizDifficulty } from '../lib/server/quiz/quiz-question.repository.js'
 
 loadProjectEnv()
-
-const uri = process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017'
-const dbName = process.env.MONGODB_DB ?? 'career_forge'
 
 function flattenQuizQuestions() {
   const questions = []
@@ -29,33 +27,21 @@ function flattenQuizQuestions() {
 }
 
 async function seedQuizQuestions() {
-  const client = new MongoClient(uri, {
-    serverSelectionTimeoutMS: 5000,
-    maxPoolSize: 10,
-  })
+  let connection = null
 
   try {
-    await client.connect()
-    const db = client.db(dbName)
-    const collection = db.collection('quiz_questions')
+    connection = await getMongooseConnection()
+    const QuizQuestion = await getQuizQuestionModel()
     const now = new Date().toISOString()
     const questions = flattenQuizQuestions()
 
-    await collection.createIndexes([
-      { key: { jobType: 1 }, name: 'quiz_questions_job_type' },
-      {
-        key: { jobType: 1, question: 1 },
-        unique: true,
-        name: 'quiz_questions_job_type_question',
-      },
-    ])
+    await QuizQuestion.createIndexes()
 
-    await collection.deleteMany({})
+    await QuizQuestion.deleteMany({})
 
     if (questions.length) {
-      await collection.insertMany(
+      await QuizQuestion.insertMany(
         questions.map((question) => ({
-          _id: new ObjectId(),
           ...question,
           createdAt: now,
           updatedAt: now,
@@ -63,9 +49,11 @@ async function seedQuizQuestions() {
       )
     }
 
-    console.log(`Seeded ${questions.length} quiz questions into ${dbName}.`)
+    console.log(`Seeded ${questions.length} quiz questions into ${connection.name}.`)
   } finally {
-    await client.close()
+    if (connection) {
+      await connection.close()
+    }
   }
 }
 

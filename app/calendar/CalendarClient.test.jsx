@@ -151,6 +151,27 @@ describe('CalendarClient', () => {
     expect(screen.getByLabelText('Event Title')).toBeInTheDocument()
   })
 
+  it('lets the user enable or disable reminders in the event modal', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <CalendarClient
+        initialApplications={initialApplications}
+        initialEvents={initialEvents}
+        initialJobListings={initialJobListings}
+        initialCVProfiles={initialCVProfiles}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Add Event' }))
+
+    const reminderToggle = screen.getByLabelText('Enable reminder')
+    expect(reminderToggle).toBeChecked()
+
+    await user.click(reminderToggle)
+    expect(reminderToggle).not.toBeChecked()
+  })
+
   it('filters job applications in the event modal while typing', async () => {
     const user = userEvent.setup()
 
