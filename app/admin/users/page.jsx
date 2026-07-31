@@ -6,6 +6,7 @@ import {
   serviceListAdminUsers,
   serviceListAdminWarningUsers,
 } from '@/lib/server/admin/admin-users.service.js'
+import { serializeForClient } from '@/lib/server/serialize-for-client.js'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,12 +42,12 @@ export default async function AdminUsersPage({ searchParams }) {
 
   return (
     <AdminUsersClient
-      initialUsers={users}
-      initialPagination={pagination}
+      initialUsers={serializeForClient(users)}
+      initialPagination={serializeForClient(pagination)}
       initialQuery={typeof q === 'string' ? q : ''}
       currentUserId={currentUser._id}
-      initialRestrictedUsers={restrictedUsers}
-      initialWarningUsers={warningUsers}
+      initialRestrictedUsers={serializeForClient(restrictedUsers)}
+      initialWarningUsers={serializeForClient(warningUsers)}
     />
   )
 }

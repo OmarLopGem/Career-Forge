@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getCurrentUserFromRequest } from "@/lib/server/auth/current-user.js";
 import { serviceGetTicket } from "@/lib/server/support/support.service.js";
 import { getUserById } from "@/lib/server/auth/users.repository.js";
+import { serializeForClient } from "@/lib/server/serialize-for-client.js";
 import AdminSupportThreadClient from "./AdminSupportThreadClient.jsx";
 
 export const dynamic = "force-dynamic";
@@ -96,7 +97,7 @@ export default async function AdminSupportThreadPage({ params }) {
         <AdminSupportThreadClient
           ticketId={ticket._id}
           initialStatus={ticket.status}
-          initialMessages={decoratedMessages}
+          initialMessages={serializeForClient(decoratedMessages)}
         />
       </div>
     </main>

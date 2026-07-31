@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,13 +24,41 @@ function BellIcon({ className = "" }) {
   );
 }
 
+function ChevronIcon({ isOpen = false, className = "" }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`${className} transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 // The header reads the server-provided user snapshot and derives the navigation
 // model locally so role-based links stay consistent across desktop and mobile.
 export default function Header({ currentUser = null }) {
   const pathname = usePathname();
+  return <HeaderNavigation key={pathname} currentUser={currentUser} pathname={pathname} />;
+}
+
+function HeaderNavigation({ currentUser = null, pathname }) {
   const router = useRouter();
+  const workspaceMenuRef = useRef(null);
+  const adminMenuRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [openDesktopMenu, setOpenDesktopMenu] = useState(null);
+  const [openMobileSections, setOpenMobileSections] = useState({
+    workspace: false,
+    admin: false,
+  });
   const [isPending, startTransition] = useTransition();
 
   const isLoggedIn = !!currentUser;
@@ -41,7 +69,7 @@ export default function Header({ currentUser = null }) {
       name: "Home",
       href: "/",
     },
-  ]
+  ];
 
   const authenticatedLinks = [
     {
@@ -58,23 +86,22 @@ export default function Header({ currentUser = null }) {
     },
   ];
 
-  const userLinks = [
+  const workspaceLinks = [
     {
       name: "Calendar",
       href: "/calendar",
     },
     {
-      name: "Notifications",
-      href: "/notifications",
-      desktopHidden: true,
+      name: "Progress",
+      href: "/progress",
     },
     {
       name: "Profile",
       href: "/profile",
     },
     {
-      name: "Progress",
-      href: "/progress",
+      name: "Notifications",
+      href: "/notifications",
     },
   ];
 
@@ -95,13 +122,15 @@ export default function Header({ currentUser = null }) {
       name: "Quiz Library",
       href: "/admin/quiz",
     },
+    {
+      name: "Admin Support",
+      href: "/admin/support",
+    },
   ];
 
-  const navLinks = [
+  const primaryLinks = [
     ...publicLinks,
     ...(isLoggedIn ? authenticatedLinks : []),
-    ...(isLoggedIn ? userLinks : []),
-    ...(isAdmin ? adminLinks : []),
   ];
 
   const isActiveLink = (href) => {
@@ -124,10 +153,37 @@ export default function Header({ currentUser = null }) {
     });
   };
 
+  const toggleDesktopMenu = (menuName) => {
+    setOpenDesktopMenu((current) => (current === menuName ? null : menuName));
+  };
+
+  const toggleMobileSection = (sectionName) => {
+    setOpenMobileSections((current) => ({
+      ...current,
+      [sectionName]: !current[sectionName],
+    }));
+  };
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      const target = event.target;
+      const clickedWorkspace = workspaceMenuRef.current?.contains(target);
+      const clickedAdmin = adminMenuRef.current?.contains(target);
+      if (!clickedWorkspace && !clickedAdmin) {
+        setOpenDesktopMenu(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-md border-b border-border">
       <nav className="max-w-7xl mx-auto px-5 sm:px-6 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           {/* Logo */}
           <Link
             href="/"
@@ -148,8 +204,8 @@ export default function Header({ currentUser = null }) {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-2">
-            {navLinks.filter((link) => !link.desktopHidden).map((link) => {
+          <div className="hidden xl:flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
+            {primaryLinks.map((link) => {
               const isActive = isActiveLink(link.href);
 
               return (
@@ -183,6 +239,94 @@ export default function Header({ currentUser = null }) {
                 </Link>
               );
             })}
+
+            {isLoggedIn ? (
+              <div ref={workspaceMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => toggleDesktopMenu("workspace")}
+                  aria-expanded={openDesktopMenu === "workspace"}
+                  aria-haspopup="menu"
+                  className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                    openDesktopMenu === "workspace" ||
+                    workspaceLinks.some((link) => isActiveLink(link.href))
+                      ? "bg-blue-soft text-brand-blue"
+                      : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                  }`}
+                >
+                  Workspace
+                  <ChevronIcon isOpen={openDesktopMenu === "workspace"} className="h-4 w-4" />
+                </button>
+
+                {openDesktopMenu === "workspace" ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full mt-3 min-w-56 rounded-2xl border border-border bg-surface p-2 shadow-xl"
+                  >
+                    {workspaceLinks.map((link) => {
+                      const isActive = isActiveLink(link.href);
+                      return (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          className={`block rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                            isActive
+                              ? "bg-blue-soft text-brand-blue"
+                              : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                          }`}
+                        >
+                          {link.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {isAdmin ? (
+              <div ref={adminMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => toggleDesktopMenu("admin")}
+                  aria-expanded={openDesktopMenu === "admin"}
+                  aria-haspopup="menu"
+                  className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                    openDesktopMenu === "admin" ||
+                    adminLinks.some((link) => isActiveLink(link.href))
+                      ? "bg-blue-soft text-brand-blue"
+                      : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                  }`}
+                >
+                  Admin
+                  <ChevronIcon isOpen={openDesktopMenu === "admin"} className="h-4 w-4" />
+                </button>
+
+                {openDesktopMenu === "admin" ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full mt-3 min-w-64 rounded-2xl border border-border bg-surface p-2 shadow-xl"
+                  >
+                    {adminLinks.map((link) => {
+                      const isActive = isActiveLink(link.href);
+                      return (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          className={`block rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                            isActive
+                              ? "bg-blue-soft text-brand-blue"
+                              : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                          }`}
+                        >
+                          {link.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
             {isLoggedIn ? (
               <>
@@ -239,7 +383,7 @@ export default function Header({ currentUser = null }) {
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle navigation menu"
             aria-expanded={isOpen}
-            className="lg:hidden flex flex-col items-center justify-center gap-1.5 h-10 w-10 rounded-lg hover:bg-cyan-soft transition-colors"
+            className="flex h-10 w-10 shrink-0 flex-col items-center justify-center gap-1.5 rounded-lg transition-colors hover:bg-cyan-soft xl:hidden"
           >
             <span
               className={`
@@ -265,12 +409,12 @@ export default function Header({ currentUser = null }) {
         {/* Mobile Navigation */}
         <div
           className={`
-            lg:hidden overflow-hidden transition-all duration-300 ease-in-out
+            overflow-hidden transition-all duration-300 ease-in-out xl:hidden
             ${isOpen ? "max-h-[600px] opacity-100 mt-4" : "max-h-0 opacity-0"}
           `}
         >
           <div className="flex flex-col gap-2 pt-4 border-t border-border">
-            {navLinks.map((link) => {
+            {primaryLinks.map((link) => {
               const isActive = isActiveLink(link.href);
 
               return (
@@ -291,6 +435,78 @@ export default function Header({ currentUser = null }) {
                 </Link>
               );
             })}
+
+            {isLoggedIn ? (
+              <div className="rounded-2xl border border-border bg-background/70">
+                <button
+                  type="button"
+                  onClick={() => toggleMobileSection("workspace")}
+                  aria-expanded={openMobileSections.workspace}
+                  className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-navy"
+                >
+                  <span>Workspace</span>
+                  <ChevronIcon isOpen={openMobileSections.workspace} className="h-4 w-4" />
+                </button>
+
+                {openMobileSections.workspace ? (
+                  <div className="border-t border-border px-2 pb-2">
+                    {workspaceLinks.map((link) => {
+                      const isActive = isActiveLink(link.href);
+                      return (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          onClick={() => setIsOpen(false)}
+                          className={`mt-2 block rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                            isActive
+                              ? "bg-blue-soft text-brand-blue"
+                              : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                          }`}
+                        >
+                          {link.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {isAdmin ? (
+              <div className="rounded-2xl border border-border bg-background/70">
+                <button
+                  type="button"
+                  onClick={() => toggleMobileSection("admin")}
+                  aria-expanded={openMobileSections.admin}
+                  className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-navy"
+                >
+                  <span>Admin</span>
+                  <ChevronIcon isOpen={openMobileSections.admin} className="h-4 w-4" />
+                </button>
+
+                {openMobileSections.admin ? (
+                  <div className="border-t border-border px-2 pb-2">
+                    {adminLinks.map((link) => {
+                      const isActive = isActiveLink(link.href);
+                      return (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          onClick={() => setIsOpen(false)}
+                          className={`mt-2 block rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                            isActive
+                              ? "bg-blue-soft text-brand-blue"
+                              : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                          }`}
+                        >
+                          {link.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
             {isLoggedIn ? (
               <>

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUserFromRequest } from "@/lib/server/auth/current-user.js";
 import { serviceListAdminTickets } from "@/lib/server/support/support.service.js";
 import { listUsersByIds } from "@/lib/server/auth/users.repository.js";
+import { serializeForClient } from "@/lib/server/serialize-for-client.js";
 import AdminSupportInboxClient from "./AdminSupportInboxClient.jsx";
 
 export const dynamic = "force-dynamic";
@@ -76,9 +77,9 @@ export default async function AdminSupportInboxPage({ searchParams }) {
 
   return (
     <AdminSupportInboxClient
-      initialTickets={decorateTickets(result.tickets, userMap)}
-      pagination={result.pagination}
-      stats={result.stats}
+      initialTickets={serializeForClient(decorateTickets(result.tickets, userMap))}
+      pagination={serializeForClient(result.pagination)}
+      stats={serializeForClient(result.stats)}
       activeStatus={status}
       activeSort={sort}
       initialQuery={q}
