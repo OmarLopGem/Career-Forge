@@ -509,7 +509,9 @@ export default function AdminUsersClient({
         const confirmationMessage =
           targetStatus === 'blocked'
             ? `Suspend ${user.email}? They'll be signed out immediately.`
-            : `Activate ${user.email}? They'll regain access to Career Forge.`
+            : user.status === 'blocked'
+              ? `Revoke the suspension for ${user.email}? They'll regain access, and their warning history will be preserved.`
+              : `Activate ${user.email}? They'll regain access to Career Forge.`
         const confirmed = window.confirm(confirmationMessage)
         if (!confirmed) return
       }
@@ -543,7 +545,9 @@ export default function AdminUsersClient({
         setMessage(
           targetStatus === 'blocked'
             ? `${user.email} is now suspended.`
-            : `${user.email} is now active.`,
+            : user.status === 'blocked'
+              ? `${user.email}'s suspension was revoked. Warning history was preserved.`
+              : `${user.email} is now active.`,
         )
         await loadUsers(page, query)
         await refreshAdminSections()
@@ -836,7 +840,7 @@ export default function AdminUsersClient({
             </p>
             <h2 className="mt-2 text-2xl font-bold text-navy">Suspended and deleted accounts</h2>
             <p className="mt-2 text-sm text-text-muted">
-              These accounts cannot access Career Forge. Deleted accounts remain here for audit purposes.
+              Suspensions can be revoked without clearing warning history. Deleted accounts remain here for audit purposes.
             </p>
           </div>
           <span className="rounded-full bg-orange-soft px-3 py-1 text-sm font-semibold text-forge-orange">
@@ -850,7 +854,7 @@ export default function AdminUsersClient({
           </p>
         ) : (
           <div className="mt-6 overflow-x-auto rounded-xl border border-border">
-            <table className="w-full border-collapse bg-white text-left text-sm">
+            <table className="min-w-[880px] w-full border-collapse bg-white text-left text-sm">
               <thead className="bg-orange-soft">
                 <tr>
                   <th className="p-3">Name</th>
@@ -858,6 +862,7 @@ export default function AdminUsersClient({
                   <th className="p-3">Role</th>
                   <th className="p-3">Access status</th>
                   <th className="p-3">Warnings</th>
+                  <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -868,6 +873,30 @@ export default function AdminUsersClient({
                     <td className="p-3 capitalize">{user.role}</td>
                     <td className="p-3"><StatusPill status={user.status} /></td>
                     <td className="p-3"><WarningPill count={user.warningCount ?? 0} /></td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/admin/users/${encodeURIComponent(user._id)}`}
+                          className="inline-flex rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-navy transition hover:border-brand-blue hover:text-brand-blue"
+                        >
+                          View history
+                        </Link>
+                        {user.status === 'blocked' ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleUserStatus(user, 'active')}
+                            disabled={pendingUserIds.has(user._id)}
+                            className="inline-flex rounded-lg border-2 border-success-green bg-success-green px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {pendingUserIds.has(user._id) ? 'Restoring…' : 'Revoke suspension'}
+                          </button>
+                        ) : (
+                          <span className="text-xs font-medium text-text-muted">
+                            Audit record only
+                          </span>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -11,10 +11,13 @@ export default async function LoginPage({ searchParams }) {
   const user = await getCurrentUserFromRequest()
   const params = await searchParams
   const redirectTo = sanitizeRedirectTo(params?.redirectTo)
+  const notice = params?.reason === 'access-revoked'
+    ? 'Your session ended because your account access was revoked. Contact an administrator if you believe this is a mistake.'
+    : ''
 
   if (user) {
     redirect(redirectTo)
   }
 
-  return <AuthFormClient mode="login" redirectTo={redirectTo} />
+  return <AuthFormClient mode="login" redirectTo={redirectTo} notice={notice} />
 }
