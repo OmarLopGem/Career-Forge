@@ -227,7 +227,6 @@ export default function AdminQuizClient({ initialQuestions }) {
                   <option value="mixed">Mixed set</option>
                   <option value="mcq">Multiple choice</option>
                   <option value="blank">Fill in the blank</option>
-                  <option value="short">Short answer</option>
                 </select>
               </label>
 
@@ -353,7 +352,6 @@ export default function AdminQuizClient({ initialQuestions }) {
               >
                 <option value="mcq">Multiple choice</option>
                 <option value="blank">Fill in the blank</option>
-                <option value="short">Short answer</option>
               </select>
             </Field>
 

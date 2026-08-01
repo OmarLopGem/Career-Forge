@@ -21,12 +21,15 @@ export default function QuizClient() {
   const [totalMarks, setTotalMarks] = useState(0)
   const [totalQuestions, setTotalQuestions] = useState(0)
   const [passed, setPassed] = useState(false)
+  const [difficulty, setDifficulty] = useState('Beginner')
+  const [nextDifficulty, setNextDifficulty] = useState('Beginner')
   const [questionResults, setQuestionResults] = useState({})
   const [feedback, setFeedback] = useState('')
   const [showResult, setShowResult] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [quizVersion, setQuizVersion] = useState(0)
 
   useEffect(() => {
     async function loadQuestions() {
@@ -36,17 +39,19 @@ export default function QuizClient() {
       try {
         const data = await requestJson(`/api/quiz?jobType=${encodeURIComponent(jobType)}`)
         setQuestions(data.questions || [])
-      } catch (error) {
-        console.error('Failed to load quiz questions:', error)
+        setDifficulty(data.difficulty || 'Beginner')
+        setNextDifficulty(data.difficulty || 'Beginner')
+      } catch (loadError) {
+        console.error('Failed to load quiz questions:', loadError)
         setQuestions([])
-        setError(error instanceof Error ? error.message : 'Unable to load quiz questions.')
+        setError(loadError instanceof Error ? loadError.message : 'Unable to load quiz questions.')
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
     loadQuestions()
-  }, [jobType])
+  }, [jobType, quizVersion])
 
   const handleJobChange = (value) => {
     setJobType(value)
@@ -56,6 +61,8 @@ export default function QuizClient() {
     setTotalMarks(0)
     setTotalQuestions(0)
     setPassed(false)
+    setDifficulty('Beginner')
+    setNextDifficulty('Beginner')
     setQuestionResults({})
     setFeedback('')
     setShowResult(false)
@@ -76,13 +83,15 @@ export default function QuizClient() {
     try {
       const result = await requestJson('/api/quiz/submit', {
         method: 'POST',
-        body: JSON.stringify({ jobType, answers }),
+        body: JSON.stringify({ jobType, difficulty, answers }),
       })
       setCorrectCount(result.correctCount)
       setTotalQuestions(result.totalQuestions)
       setScore(result.score)
       setTotalMarks(result.totalMarks)
       setPassed(result.passed)
+      setDifficulty(result.difficulty)
+      setNextDifficulty(result.nextDifficulty)
       setFeedback(result.feedback)
       setQuestionResults(
         Object.fromEntries(
@@ -122,11 +131,23 @@ export default function QuizClient() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const startNextQuiz = () => {
+    setAnswers({})
+    setScore(null)
+    setCorrectCount(0)
+    setTotalMarks(0)
+    setTotalQuestions(0)
+    setPassed(false)
+    setQuestionResults({})
+    setFeedback('')
+    setShowResult(false)
+    setError('')
+    setQuizVersion((current) => current + 1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const getDifficulty = (question) => {
-    if (question.difficulty) return question.difficulty
-    if (question.type === 'short') return 'Advanced'
-    if (question.type === 'blank') return 'Intermediate'
-    return 'Beginner'
+    return question.difficulty || difficulty
   }
 
   const difficultyStyles = {
@@ -145,6 +166,9 @@ export default function QuizClient() {
               Select a job type and complete its interview questions. Your result is
               calculated securely and saved to your account. Passing score: 70%.
             </p>
+            <span className="mt-4 inline-flex rounded-full bg-blue-soft px-4 py-2 text-sm font-semibold text-brand-blue">
+              Current level: {difficulty}
+            </span>
           </div>
           <StreakBadge className="min-w-[220px]" />
         </div>
@@ -167,18 +191,19 @@ export default function QuizClient() {
 
         <div className="mt-6 rounded-xl bg-blue-soft p-4 text-text-main">
           <p>
-            <strong>Quiz Format:</strong> 10 MCQs, 5 fill in the blanks, and 5 one-line answers.
+            <strong>Quiz Format:</strong> 10 {difficulty} questions using multiple choice and fill in the blanks.
           </p>
           <p className="mt-1">
-            <strong>Marking:</strong> Questions may have different mark values.
-            Your final score is calculated from the complete question set.
+            <strong>Progression:</strong> Pass with 70% to unlock the next level. One-line answers are not included.
           </p>
         </div>
 
         {loading ? <p className="mt-8 text-text-muted">Loading quiz questions...</p> : null}
 
         {!loading && questions.length === 0 ? (
-          <p className="mt-8 font-semibold text-red-600">No questions found for this job type.</p>
+          <p className="mt-8 font-semibold text-red-600">
+            No {difficulty.toLowerCase()} questions found for this job type.
+          </p>
         ) : null}
 
         {!loading && questions.length > 0 ? (
@@ -203,9 +228,7 @@ export default function QuizClient() {
                       <span className="rounded-full bg-orange-soft px-3 py-1 text-sm font-medium text-forge-orange">
                         {question.type === 'mcq'
                           ? 'MCQ'
-                          : question.type === 'blank'
-                            ? 'Blank'
-                            : 'One Line'}
+                          : 'Blank'}
                       </span>
                     </div>
                   </div>
@@ -233,7 +256,7 @@ export default function QuizClient() {
                       type="text"
                       value={answers[question._id] || ''}
                       onChange={(event) => handleAnswerChange(question._id, event.target.value)}
-                      placeholder={question.type === 'blank' ? 'Fill in the blank...' : 'Write one-line answer...'}
+                      placeholder="Fill in the blank..."
                       className="w-full rounded-lg border border-border p-3 text-text-main outline-none focus:border-brand-blue"
                     />
                   )}
@@ -283,7 +306,11 @@ export default function QuizClient() {
             {!passed ? (
               <p className="mt-2 font-semibold text-forge-orange">Score below 70%. You can retake this quiz today.</p>
             ) : (
-              <p className="mt-2 font-semibold text-success-green">Great job. You passed this quiz.</p>
+              <p className="mt-2 font-semibold text-success-green">
+                {nextDifficulty === difficulty
+                  ? `Great job. You completed the ${difficulty} level.`
+                  : `Great job. You passed ${difficulty} and unlocked ${nextDifficulty}.`}
+              </p>
             )}
 
             <p className="mt-4 text-text-muted">{feedback}</p>
@@ -296,7 +323,17 @@ export default function QuizClient() {
               >
                 Retake Quiz
               </button>
-            ) : null}
+            ) : (
+              <button
+                type="button"
+                onClick={startNextQuiz}
+                className="mt-5 rounded-xl bg-brand-blue px-6 py-3 font-medium text-white hover:bg-brand-blue-hover"
+              >
+                {nextDifficulty === difficulty
+                  ? `Practice ${difficulty} Again`
+                  : `Start ${nextDifficulty} Quiz`}
+              </button>
+            )}
           </div>
         ) : null}
       </div>
