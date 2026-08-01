@@ -30,7 +30,7 @@ const copyByMode = {
   },
 }
 
-export default function AuthFormClient({ mode, redirectTo = '/calendar' }) {
+export default function AuthFormClient({ mode, redirectTo = '/calendar', notice = '' }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -197,6 +197,15 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar' }) {
                   className="rounded-2xl border border-forge-orange/30 bg-orange-soft px-4 py-3 text-sm text-forge-orange"
                 >
                   {error}
+                </p>
+              ) : null}
+
+              {!error && notice ? (
+                <p
+                  role="status"
+                  className="rounded-2xl border border-forge-orange/30 bg-orange-soft px-4 py-3 text-sm text-forge-orange"
+                >
+                  {notice}
                 </p>
               ) : null}
 

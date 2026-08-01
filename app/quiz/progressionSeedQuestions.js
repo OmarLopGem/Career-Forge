@@ -1,0 +1,98 @@
+function mcq(question, options, answer) {
+  return { type: 'mcq', question, options, answer }
+}
+
+function blank(question, answer) {
+  return { type: 'blank', question, answer }
+}
+
+// These questions extend each role from 15 to 30 objective questions. Combined
+// with seedQuestions.js, each role has 10 Beginner, 10 Intermediate, and
+// 10 Advanced questions without subjective one-line answers.
+export const progressionQuizData = {
+  'Frontend Developer': [
+    mcq('Which browser method selects an element by its id?', ['document.getElementById()', 'document.queryAll()', 'window.findId()', 'document.getByName()'], 'document.getElementById()'),
+    mcq('Which CSS layout system works with both rows and columns?', ['Flexbox', 'CSS Grid', 'Float', 'Inline block'], 'CSS Grid'),
+    blank('The second argument passed to React useEffect is the dependency ______.', 'array'),
+    blank('The semantic HTML element used for primary navigation is ______.', 'nav'),
+    mcq('Which Next.js module provides the optimized Image component?', ['next/image', 'next/media', 'react/image', 'next/assets'], 'next/image'),
+    mcq('Which React utility can skip a component render when its props have not changed?', ['React.memo', 'React.lazy', 'React.cloneElement', 'React.createRef'], 'React.memo'),
+    blank('Attaching React behavior to server-rendered HTML is called ______.', 'hydration'),
+    mcq('Which CSS selector has the highest specificity?', ['div', '.card', '#app', '*'], '#app'),
+    blank('An icon-only button can receive an accessible name with the aria-______ attribute.', 'label'),
+    mcq('What is a key benefit of a React Server Component?', ['It reduces client-side JavaScript', 'It requires localStorage', 'It disables routing', 'It runs only after hydration'], 'It reduces client-side JavaScript'),
+    blank('Event delegation commonly relies on event ______ through ancestor elements.', 'bubbling'),
+    mcq('Which technique loads a JavaScript module only when it is needed?', ['Dynamic import', 'Global variables', 'CSS nesting', 'DOM cloning'], 'Dynamic import'),
+    blank('The Core Web Vital that measures main-content loading performance is ______.', 'LCP'),
+    mcq('What controls the displayed value of a controlled React input?', ['React state', 'Browser cache', 'CSS variables', 'The URL hash'], 'React state'),
+    blank('The React hook used to memoize an expensive calculated value is ______.', 'useMemo'),
+  ],
+  'Backend Developer': [
+    mcq('Which HTTP status code indicates that a resource was created successfully?', ['200', '201', '204', '304'], '201'),
+    mcq('What commonly runs between an incoming request and a route handler?', ['Middleware', 'A stylesheet', 'A migration', 'A component'], 'Middleware'),
+    blank('The token format commonly abbreviated as JWT means JSON Web ______.', 'Token'),
+    blank('In Node.js, environment variables are read from process.______.', 'env'),
+    mcq('Which HTTP method should be safe and idempotent when retrieving data?', ['GET', 'POST', 'PATCH', 'CONNECT'], 'GET'),
+    mcq('What is the safest standard defense against SQL injection?', ['Parameterized queries', 'Longer URLs', 'Client-side validation only', 'Base64 encoding'], 'Parameterized queries'),
+    blank('Limiting how many requests a client can make in a period is called rate ______.', 'limiting'),
+    mcq('Which HTTP status code usually means authentication is required or invalid?', ['401', '403', '404', '409'], '401'),
+    blank('A group of database operations that succeeds or fails together is a ______.', 'transaction'),
+    mcq('Which component is commonly used to decouple background work from an API request?', ['Message queue', 'CSS preprocessor', 'Template engine', 'Browser cookie'], 'Message queue'),
+    blank('The browser security mechanism controlling cross-origin requests is abbreviated ______.', 'CORS'),
+    mcq('What does a stateless API avoid storing between requests?', ['Client session state on the server', 'Database records', 'Response headers', 'Application logs'], 'Client session state on the server'),
+    blank('A database ______ can speed up reads on frequently queried fields.', 'index'),
+    mcq('What is horizontal scaling?', ['Adding more server instances', 'Adding RAM to one server', 'Compressing source files', 'Reducing database columns'], 'Adding more server instances'),
+    blank('The ACID property meaning all transaction operations happen or none happen is ______.', 'atomicity'),
+  ],
+  'Full Stack Developer': [
+    mcq('Which HTTP status code means a requested resource was not found?', ['200', '201', '404', '500'], '404'),
+    blank('A secret configuration value should usually be stored in an environment ______.', 'variable'),
+    mcq('Which method parses a Fetch API response body as JSON?', ['response.json()', 'response.textJson()', 'JSON.fetch()', 'response.body()'], 'response.json()'),
+    blank('The browser policy for cross-origin API access is configured with ______ headers.', 'CORS'),
+    mcq('Which command creates an optimized Next.js production build?', ['npm run build', 'npm run dev', 'npm test only', 'node install'], 'npm run build'),
+    blank('A random value used to protect a form from cross-site request forgery is a CSRF ______.', 'token'),
+    mcq('What converts an application object into JSON for transport?', ['Serialization', 'Hydration', 'Compilation', 'Indexing'], 'Serialization'),
+    blank('A server that forwards traffic to application instances is a reverse ______.', 'proxy'),
+    mcq('Which protocol supports a persistent two-way browser connection?', ['WebSocket', 'SMTP', 'FTP', 'DNS'], 'WebSocket'),
+    blank('Removing or refreshing stale stored responses is cache ______.', 'invalidation'),
+    mcq('Which standard lets a user authorize an application without sharing their password?', ['OAuth 2.0', 'CSS Modules', 'DNSSEC', 'SMTP'], 'OAuth 2.0'),
+    blank('A geographically distributed network for static assets is a ______.', 'CDN'),
+    mcq('What does server-side rendering produce before the page reaches the browser?', ['HTML', 'A database index', 'A Git commit', 'A WebSocket frame'], 'HTML'),
+    blank('A test that checks the frontend, API, and database working together is an ______ test.', 'integration'),
+    mcq('Which practice combines logs, metrics, and traces to understand a running system?', ['Observability', 'Minification', 'Normalization', 'Memoization'], 'Observability'),
+  ],
+  'QA Tester': [
+    mcq('Which quick test confirms that a new build is stable enough for deeper testing?', ['Smoke test', 'Load test', 'Mutation test', 'Accessibility audit'], 'Smoke test'),
+    blank('Testing values at and around an input limit is boundary value ______.', 'analysis'),
+    mcq('Which defect attribute describes its impact on the system?', ['Severity', 'Priority', 'Owner', 'Sprint'], 'Severity'),
+    blank('The business urgency for fixing a defect is its ______.', 'priority'),
+    mcq('Which technique groups inputs that should behave the same way?', ['Equivalence partitioning', 'Pair programming', 'Code formatting', 'Branching'], 'Equivalence partitioning'),
+    blank('A mock or stub used instead of a real dependency is a test ______.', 'double'),
+    mcq('What is a flaky test?', ['A test that passes and fails without relevant code changes', 'A test with no assertions', 'A manual test only', 'A deleted test'], 'A test that passes and fails without relevant code changes'),
+    blank('Automatically testing every integrated code change is continuous ______.', 'integration'),
+    mcq('Which test measures performance under an expected number of users?', ['Load testing', 'Unit testing', 'Smoke testing', 'Static analysis'], 'Load testing'),
+    blank('Testing beyond expected capacity to find the breaking point is ______ testing.', 'stress'),
+    mcq('Which technique changes code deliberately to check whether tests detect the change?', ['Mutation testing', 'Snapshot styling', 'Smoke testing', 'Exploratory design'], 'Mutation testing'),
+    blank('A document connecting requirements to test cases is a traceability ______.', 'matrix'),
+    mcq('Which approach combines learning, test design, and execution at the same time?', ['Exploratory testing', 'Compilation', 'Deployment', 'Normalization'], 'Exploratory testing'),
+    blank('A production defect that testing did not catch is defect ______.', 'leakage'),
+    mcq('Which metric reports how much source code was executed by tests?', ['Code coverage', 'Response time', 'Velocity', 'Defect priority'], 'Code coverage'),
+  ],
+  'Database Developer': [
+    mcq('Which SQL statement creates an index?', ['CREATE INDEX', 'MAKE INDEX', 'ADD SEARCH', 'BUILD COLUMN'], 'CREATE INDEX'),
+    blank('The SQL clause that combines rows with the same grouped values is GROUP ______.', 'BY'),
+    mcq('What groups multiple database changes into one all-or-nothing operation?', ['Transaction', 'View', 'Cursor', 'Trigger only'], 'Transaction'),
+    blank('A ______ constraint prevents duplicate values in a column or column set.', 'unique'),
+    mcq('Which join keeps every row from the left table?', ['LEFT JOIN', 'INNER JOIN', 'CROSS JOIN', 'SELF JOIN'], 'LEFT JOIN'),
+    blank('The SQL command commonly used to inspect a query execution plan is ______.', 'EXPLAIN'),
+    mcq('What is an index containing more than one field called?', ['Composite index', 'Temporary index', 'Sparse table', 'Foreign view'], 'Composite index'),
+    blank('The transaction property controlling concurrent visibility is ______.', 'isolation'),
+    mcq('What maintains copies of data on multiple database servers?', ['Replication', 'Normalization', 'Projection', 'Aggregation'], 'Replication'),
+    blank('Dividing a large dataset across multiple servers is called ______.', 'sharding'),
+    mcq('Why might a read-heavy system intentionally duplicate data?', ['To reduce expensive joins', 'To remove all indexes', 'To disable caching', 'To prevent backups'], 'To reduce expensive joins'),
+    blank('A controlled change to a database schema is a schema ______.', 'migration'),
+    mcq('Which SQL feature calculates across related rows without collapsing them into one row?', ['Window function', 'DELETE clause', 'Primary key', 'Stored file'], 'Window function'),
+    blank('When transactions wait on each other indefinitely, the condition is a ______.', 'deadlock'),
+    mcq('Which durability mechanism records changes before database pages are written?', ['Write-ahead log', 'CSS cache', 'HTTP cookie', 'Foreign key'], 'Write-ahead log'),
+  ],
+}
