@@ -5,9 +5,13 @@ import { toApiErrorResponse } from '@/lib/server/api-error.js'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const result = await serviceListJobListings()
+    const result = await serviceListJobListings({
+      what: request.nextUrl.searchParams.get('what'),
+      where: request.nextUrl.searchParams.get('where'),
+      page: request.nextUrl.searchParams.get('page'),
+    })
     return NextResponse.json(result)
   } catch (err) {
     const { body, status } = toApiErrorResponse(err)

@@ -54,10 +54,11 @@ export default function ProfileClient({
   initialWarnings = [],
 }) {
   const [isPending, startTransition] = useTransition()
+  const [deletingProfileId, setDeletingProfileId] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [account, setAccount] = useState(initialAccount)
-  const [profiles] = useState(initialProfiles)
+  const [profiles, setProfiles] = useState(initialProfiles)
   const [warnings] = useState(initialWarnings)
   const [form, setForm] = useState(() => createFormState(initialAccount, currentUser))
 
@@ -65,6 +66,45 @@ export default function ProfileClient({
     () => profiles.find((profile) => profile.isDefault) ?? profiles[0] ?? null,
     [profiles],
   )
+
+  const handleDeleteProfile = (profile) => {
+    if (!window.confirm(`Delete "${profile.title}"? This will also remove its saved CV analyses.`)) {
+      return
+    }
+
+    setMessage('')
+    setError('')
+    setDeletingProfileId(profile._id)
+
+    startTransition(async () => {
+      try {
+        await requestJson(`/api/cv/profiles/${profile._id}`, {
+          method: 'DELETE',
+        })
+
+        setProfiles((current) => {
+          const remaining = current.filter((entry) => entry._id !== profile._id)
+          if (remaining.length === 0) {
+            return []
+          }
+
+          if (remaining.some((entry) => entry.isDefault)) {
+            return remaining
+          }
+
+          return remaining.map((entry, index) => ({
+            ...entry,
+            isDefault: index === 0,
+          }))
+        })
+        setMessage(`"${profile.title}" was deleted successfully.`)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unable to delete this profile.')
+      } finally {
+        setDeletingProfileId('')
+      }
+    })
+  }
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -262,7 +302,7 @@ export default function ProfileClient({
                 href="/jobs"
                 className="rounded-xl border border-border px-5 py-3 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue"
               >
-                Go to Job Matches
+                Go to Job Listings
               </Link>
             </div>
           </div>
@@ -308,12 +348,22 @@ export default function ProfileClient({
 
                   <div className="mt-5 flex items-center justify-between gap-3 text-sm text-text-muted">
                     <span>Updated {formatDate(profile.updatedAt)}</span>
-                    <Link
-                      href="/cv-assistant"
-                      className="font-semibold text-brand-blue hover:underline"
-                    >
-                      Manage profile
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href="/cv-assistant"
+                        className="font-semibold text-brand-blue hover:underline"
+                      >
+                        Manage profile
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProfile(profile)}
+                        disabled={isPending || deletingProfileId === profile._id}
+                        className="font-semibold text-red-600 transition-colors hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {deletingProfileId === profile._id ? 'Deleting...' : 'Delete profile'}
+                      </button>
+                    </div>
                   </div>
                 </article>
               ))}

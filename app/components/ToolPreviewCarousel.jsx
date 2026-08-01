@@ -37,7 +37,7 @@ export default function ToolPreviewCarousel() {
       bar: 'bg-success-green',
     },
     {
-      title: 'Job Matches',
+      title: 'Job Listings',
       subtitle: 'Smart job listings',
       description:
         'Find job offers that match your profile, skills, niche, and professional experience.',

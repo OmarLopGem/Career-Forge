@@ -12,7 +12,7 @@ export default function Footer() {
       links: [
         { name: 'Home', href: '/' },
         { name: 'CV Assistant', href: '/cv-assistant' },
-        { name: 'Job Matches', href: '/jobs' },
+        { name: 'Job Listings', href: '/jobs' },
         { name: 'Calendar', href: '/calendar' },
         { name: 'Practice', href: '/quiz' },
         { name: 'Profile', href: '/profile' },
