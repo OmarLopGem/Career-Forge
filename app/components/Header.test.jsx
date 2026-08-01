@@ -37,7 +37,8 @@ describe('Header', () => {
     )
 
     expect(screen.getAllByRole('button', { name: /workspace/i }).length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('link', { name: 'Job Matches' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: 'Job Listings' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: 'Notifications' }).length).toBeGreaterThan(0)
     expect(screen.queryAllByRole('link', { name: 'Admin Users' })).toHaveLength(0)
 
     await user.click(screen.getAllByRole('button', { name: /workspace/i })[0])
@@ -45,6 +46,7 @@ describe('Header', () => {
     expect(screen.getAllByRole('link', { name: 'Calendar' }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('link', { name: 'Profile' }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('link', { name: 'Progress' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: 'Support' }).length).toBeGreaterThan(0)
   })
 
   it('shows admin navigation inside the admin dropdown', async () => {

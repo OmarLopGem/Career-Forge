@@ -13,13 +13,14 @@ function BellIcon({ className = "" }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.7"
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
     >
-      <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
-      <path d="M10 21a2 2 0 0 0 4 0" />
+      <path d="M9.5 19H5.617c-.744 0-1.226-.782-.893-1.447l.854-1.708c.278-.555.422-1.167.422-1.788V11c0-2 1-6 6-6s6 4 6 6v3.056c0 .621.145 1.233.422 1.789l.854 1.708c.333.665-.149 1.447-.893 1.447H14.5" />
+      <path d="M12 5V3" />
+      <path d="M9.5 19C9.5 21 10.5 22 12 22s2.5-1 2.5-3" />
     </svg>
   );
 }
@@ -77,7 +78,7 @@ function HeaderNavigation({ currentUser = null, pathname }) {
       href: "/cv-assistant",
     },
     {
-      name: "Job Matches",
+      name: "Job Listings",
       href: "/jobs",
     },
     {
@@ -102,6 +103,10 @@ function HeaderNavigation({ currentUser = null, pathname }) {
     {
       name: "Notifications",
       href: "/notifications",
+    },
+    {
+      name: "Support",
+      href: "/support",
     },
   ];
 
