@@ -9,7 +9,9 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const jobType = searchParams.get('jobType')
-    const result = await serviceListQuizQuestions(jobType)
+    const result = await serviceListQuizQuestions(jobType, {
+      forceNew: searchParams.get('new') === '1',
+    })
 
     return NextResponse.json(result)
   } catch (err) {

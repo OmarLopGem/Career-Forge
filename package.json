@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "seed:job-listings": "node scripts/seed-job-listings.mjs",
     "seed:admin": "node scripts/seed-admin.mjs",
-    "seed:quiz": "node scripts/seed-quiz.mjs"
+    "seed:quiz": "node scripts/seed-quiz.mjs",
+    "seed:quiz:ai": "node scripts/seed-quiz-ai.mjs"
   },
   "dependencies": {
     "mongodb": "^6.21.0",
