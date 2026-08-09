@@ -743,6 +743,7 @@ export default function AdminUsersClient({
             className="rounded-xl border border-border p-3"
           >
             <option value="user">User</option>
+            <option value="employer">Employer</option>
             <option value="admin">Admin</option>
           </select>
 
