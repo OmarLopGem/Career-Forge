@@ -36,7 +36,7 @@ export default async function Home() {
       label: 'Online CV',
     },
     {
-      title: 'Job Matches',
+      title: 'Job Listings',
       description:
         'Explore job listings based on your profile, skills, niche, and job descriptions that match your career goals.',
       href: '/jobs',
@@ -123,7 +123,7 @@ export default async function Home() {
                 href="/jobs"
                 className="inline-flex justify-center items-center rounded-xl border border-border bg-surface px-6 py-3 text-sm font-semibold text-navy transition-all duration-300 hover:border-brand-blue hover:text-brand-blue hover:-translate-y-0.5"
               >
-                Explore Job Matches
+                Explore Job Listings
               </Link>
             </div>
           </div>
@@ -171,7 +171,7 @@ export default async function Home() {
                 </div>
 
                 <div className="rounded-2xl bg-background p-5">
-                  <p className="text-sm text-text-muted">Job Matches</p>
+                  <p className="text-sm text-text-muted">Job Listings</p>
                   <p className="mt-2 text-3xl font-bold text-brand-blue">
                     24
                   </p>

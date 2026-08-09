@@ -6,13 +6,37 @@ import { serviceListAdminJobListings } from '@/lib/job-tracker/server/job-tracke
 export const dynamic = 'force-dynamic'
 
 function formatSalary(listing) {
-  if (!listing.salaryMin && !listing.salaryMax) return 'Not specified'
-  if (listing.salaryMin && listing.salaryMax) {
-    return `$${listing.salaryMin.toLocaleString()} – $${listing.salaryMax.toLocaleString()}`
+  const hasMin = Number.isFinite(listing.salaryMin)
+  const hasMax = Number.isFinite(listing.salaryMax)
+
+  if (!hasMin && !hasMax) return 'Not specified'
+  if (hasMin && hasMax) {
+    const formatter = new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: Number.isInteger(listing.salaryMin) ? 0 : 2,
+      maximumFractionDigits: 2,
+    })
+
+    if (listing.salaryMin === listing.salaryMax) {
+      return formatter.format(listing.salaryMin)
+    }
+
+    return `${formatter.format(listing.salaryMin)} – ${formatter.format(listing.salaryMax)}`
   }
-  return listing.salaryMin
-    ? `From $${listing.salaryMin.toLocaleString()}`
-    : `Up to $${listing.salaryMax.toLocaleString()}`
+  return hasMin
+    ? `From ${new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: Number.isInteger(listing.salaryMin) ? 0 : 2,
+        maximumFractionDigits: 2,
+      }).format(listing.salaryMin)}`
+    : `Up to ${new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: Number.isInteger(listing.salaryMax) ? 0 : 2,
+        maximumFractionDigits: 2,
+      }).format(listing.salaryMax)}`
 }
 
 function formatDate(value) {
