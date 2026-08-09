@@ -127,5 +127,16 @@ describe('AuthFormClient', () => {
     })
 
     expect(push).not.toHaveBeenCalled()
+  it('shows a revoked-access notice on the login form', () => {
+    render(
+      <AuthFormClient
+        mode="login"
+        notice="Your session ended because your account access was revoked."
+      />,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Your session ended because your account access was revoked.',
+    )
   })
 })

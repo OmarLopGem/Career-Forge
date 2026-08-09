@@ -2,7 +2,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import SessionAccessGuard from "./components/SessionAccessGuard";
 import { getCurrentUserFromRequest } from '@/lib/server/auth/current-user.js'
+import { readSessionToken } from '@/lib/server/auth/session-cookie.js'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,6 +25,7 @@ export const metadata = {
 // automatically receives the correct header state and shared footer.
 export default async function RootLayout({ children }) {
   const currentUser = await getCurrentUserFromRequest()
+  const hasSession = Boolean(await readSessionToken())
 
   return (
     <html
@@ -31,6 +34,7 @@ export default async function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <SessionAccessGuard hasSession={hasSession} />
         <Header currentUser={currentUser} />
         {children}
         <Footer />
