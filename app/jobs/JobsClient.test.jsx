@@ -45,27 +45,40 @@ const defaultProps = {
   },
   pagination: {
     page: 2,
-    pageSize: 20,
-    total: 45,
-    totalPages: 3,
+    pageSize: 30,
+    total: 1500,
+    totalPages: 50,
   },
 }
 
 describe('JobsClient', () => {
-  it('renders pagination summary and navigation links', () => {
+  it('renders integrated pagination controls above and below the listings', () => {
     render(<JobsClient {...defaultProps} />)
 
-    expect(screen.getByText('Showing 21-21 of 45 listings.')).toBeInTheDocument()
-    expect(screen.getAllByText('Page 2 of 3').length).toBeGreaterThan(0)
-    expect(screen.getByRole('link', { name: 'Previous' })).toHaveAttribute(
+    expect(screen.queryByText(/Showing \d+-\d+ of/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText('Page 2 of 50')).toHaveLength(2)
+    expect(screen.getAllByRole('link', { name: 'Previous' })).toHaveLength(2)
+    expect(screen.getAllByRole('link', { name: 'Previous' })[0]).toHaveAttribute(
       'href',
       '/jobs?what=frontend&where=remote&page=1',
     )
-    expect(screen.getByRole('link', { name: 'First page' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: '1' })[0]).toHaveAttribute(
       'href',
       '/jobs?what=frontend&where=remote&page=1',
     )
-    expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: '3' })[0]).toHaveAttribute(
+      'href',
+      '/jobs?what=frontend&where=remote&page=3',
+    )
+    expect(screen.getAllByRole('link', { name: '4' })[0]).toHaveAttribute(
+      'href',
+      '/jobs?what=frontend&where=remote&page=4',
+    )
+    expect(screen.getAllByRole('link', { name: '50' })[0]).toHaveAttribute(
+      'href',
+      '/jobs?what=frontend&where=remote&page=50',
+    )
+    expect(screen.getAllByRole('link', { name: 'Next' })[0]).toHaveAttribute(
       'href',
       '/jobs?what=frontend&where=remote&page=3',
     )

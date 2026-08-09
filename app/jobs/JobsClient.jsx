@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
 import { jobStatusLabels, jobStatusStyles } from '@/lib/job-tracker/client/constants.js'
 
+const DEFAULT_JOB_LISTINGS_PAGE_SIZE = 30
+
 function getDefaultCVProfileId(cvProfiles) {
   return cvProfiles.find((profile) => profile.isDefault)?._id ?? cvProfiles[0]?._id ?? ''
 }
@@ -77,6 +79,121 @@ function buildJobsHref({ what, where, page }) {
   return query ? `/jobs?${query}` : '/jobs'
 }
 
+function buildPaginationItems(currentPage, totalPages) {
+  if (totalPages <= 1) {
+    return [1]
+  }
+
+  if (totalPages <= 6) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1)
+  }
+
+  if (currentPage <= 4) {
+    return [1, 2, 3, 4, 'ellipsis', totalPages]
+  }
+
+  if (currentPage >= totalPages - 3) {
+    return [1, 'ellipsis', totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+  }
+
+  return [1, 'ellipsis', currentPage - 1, currentPage, currentPage + 1, 'ellipsis', totalPages]
+}
+
+function PaginationNav({ currentPage, totalPages, search, placement = 'top' }) {
+  const pageItems = buildPaginationItems(currentPage, totalPages)
+  const previousPageHref = buildJobsHref({
+    what: search?.what,
+    where: search?.where,
+    page: Math.max(1, currentPage - 1),
+  })
+  const nextPageHref = buildJobsHref({
+    what: search?.what,
+    where: search?.where,
+    page: Math.min(totalPages, currentPage + 1),
+  })
+
+  return (
+    <nav
+      aria-label={`Job listings pagination ${placement}`}
+      className={`flex flex-col gap-4 ${
+        placement === 'top'
+          ? 'border-b border-border pb-4'
+          : 'border-t border-border pt-4'
+      } lg:flex-row lg:items-center lg:justify-between`}
+    >
+      <p className="text-sm font-medium text-text-muted">
+        Page {currentPage} of {totalPages}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {currentPage > 1 ? (
+          <Link
+            href={previousPageHref}
+            className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue"
+          >
+            Previous
+          </Link>
+        ) : (
+          <span className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-text-muted opacity-50">
+            Previous
+          </span>
+        )}
+
+        {pageItems.map((item, index) => {
+          if (item === 'ellipsis') {
+            return (
+              <span
+                key={`ellipsis-${placement}-${index}`}
+                className="px-2 text-sm font-semibold text-text-muted"
+              >
+                ...
+              </span>
+            )
+          }
+
+          if (item === currentPage) {
+            return (
+              <span
+                key={`${placement}-page-${item}`}
+                className="rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white"
+              >
+                {item}
+              </span>
+            )
+          }
+
+          return (
+            <Link
+              key={`${placement}-page-${item}`}
+              href={buildJobsHref({
+                what: search?.what,
+                where: search?.where,
+                page: item,
+              })}
+              className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue"
+            >
+              {item}
+            </Link>
+          )
+        })}
+
+        {currentPage < totalPages ? (
+          <Link
+            href={nextPageHref}
+            className="rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-hover"
+          >
+            Next
+          </Link>
+        ) : (
+          <span className="rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white opacity-50">
+            Next
+          </span>
+        )}
+      </div>
+    </nav>
+  )
+}
+
 // This page displays the shared catalog, but the tracking action always creates
 // a private application record tied to the current user.
 export default function JobsClient({
@@ -85,7 +202,7 @@ export default function JobsClient({
   initialCVProfiles,
   initialSearch = { what: '', where: '', page: 1 },
   sourceMeta = null,
-  pagination = { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+  pagination = { page: 1, pageSize: DEFAULT_JOB_LISTINGS_PAGE_SIZE, total: 0, totalPages: 0 },
 }) {
   const [jobListings] = useState(initialJobListings)
   const [applications, setApplications] = useState(initialApplications)
@@ -101,28 +218,7 @@ export default function JobsClient({
   const isLiveAdzuna = sourceMeta?.provider === 'adzuna' && sourceMeta?.fallbackUsed === false
   const isMongoFallback = sourceMeta?.fallbackUsed === true
   const currentPage = Math.max(1, Number.parseInt(pagination?.page, 10) || 1)
-  const totalPages = Math.max(0, Number.parseInt(pagination?.totalPages, 10) || 0)
-  const totalResults = Math.max(0, Number.parseInt(pagination?.total, 10) || 0)
-  const pageSize = Math.max(1, Number.parseInt(pagination?.pageSize, 10) || 20)
-  const showingFrom = totalResults === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const showingTo = totalResults === 0
-    ? 0
-    : Math.min(totalResults, (currentPage - 1) * pageSize + jobListings.length)
-  const previousPageHref = buildJobsHref({
-    what: initialSearch?.what,
-    where: initialSearch?.where,
-    page: Math.max(1, currentPage - 1),
-  })
-  const nextPageHref = buildJobsHref({
-    what: initialSearch?.what,
-    where: initialSearch?.where,
-    page: currentPage + 1,
-  })
-  const firstPageHref = buildJobsHref({
-    what: initialSearch?.what,
-    where: initialSearch?.where,
-    page: 1,
-  })
+  const totalPages = Math.max(jobListings.length > 0 ? 1 : 0, Number.parseInt(pagination?.totalPages, 10) || 0)
 
   const trackedByListingId = useMemo(() => {
     // A map keeps repeated "already tracked?" lookups O(1) while rendering cards.
@@ -270,17 +366,6 @@ export default function JobsClient({
             </Link>
           </form>
 
-          <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-border bg-background px-4 py-4 text-sm text-text-muted md:flex-row md:items-center md:justify-between">
-            <p>
-              {totalResults > 0
-                ? `Showing ${showingFrom}-${showingTo} of ${totalResults} listing${totalResults === 1 ? '' : 's'}.`
-                : 'No listings available for the current search.'}
-            </p>
-            <p>
-              Page {currentPage}
-              {totalPages > 0 ? ` of ${totalPages}` : ''}
-            </p>
-          </div>
         </section>
 
         <div className="mt-6 rounded-[2rem] border border-border bg-surface p-5 shadow-sm">
@@ -331,15 +416,22 @@ export default function JobsClient({
             </p>
           </section>
         ) : (
-          <>
-            <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <section className="mt-8">
+            <PaginationNav
+              currentPage={currentPage}
+              totalPages={totalPages}
+              search={initialSearch}
+              placement="top"
+            />
+
+            <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {jobListings.map((listing) => {
                 const trackedApplication = trackedByListingId.get(listing._id)
 
                 return (
                   <article
                     key={listing._id}
-                    className="rounded-[2rem] border border-border bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                    className="border border-border bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -418,58 +510,15 @@ export default function JobsClient({
               })}
             </div>
 
-            {totalPages > 1 ? (
-              <nav
-                aria-label="Job listings pagination"
-                className="mt-8 flex flex-col gap-4 rounded-[2rem] border border-border bg-surface p-5 shadow-sm md:flex-row md:items-center md:justify-between"
-              >
-                <p className="text-sm text-text-muted">
-                  Browse more real listings from Adzuna without losing your current search.
-                </p>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  {currentPage > 1 ? (
-                    <Link
-                      href={firstPageHref}
-                      className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue"
-                    >
-                      First page
-                    </Link>
-                  ) : null}
-
-                  {currentPage > 1 ? (
-                    <Link
-                      href={previousPageHref}
-                      className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue"
-                    >
-                      Previous
-                    </Link>
-                  ) : (
-                    <span className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-muted opacity-50">
-                      Previous
-                    </span>
-                  )}
-
-                  <span className="rounded-xl bg-blue-soft px-4 py-2 text-sm font-semibold text-brand-blue">
-                    Page {currentPage} of {totalPages}
-                  </span>
-
-                  {currentPage < totalPages ? (
-                    <Link
-                      href={nextPageHref}
-                      className="rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-hover"
-                    >
-                      Next
-                    </Link>
-                  ) : (
-                    <span className="rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white opacity-50">
-                      Next
-                    </span>
-                  )}
-                </div>
-              </nav>
-            ) : null}
-          </>
+            <div className="mt-8">
+              <PaginationNav
+                currentPage={currentPage}
+                totalPages={totalPages}
+                search={initialSearch}
+                placement="bottom"
+              />
+            </div>
+          </section>
         )}
       </section>
     </div>

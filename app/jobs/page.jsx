@@ -8,6 +8,7 @@ import {
 import { serviceListProfiles } from '@/lib/cv-assistant/server/cv-service.js'
 
 export const dynamic = 'force-dynamic'
+const JOB_LISTINGS_PAGE_SIZE = 30
 
 // Jobs needs both the shared catalog and the user's tracked applications so the
 // UI can show which listings are already being followed.
@@ -24,6 +25,7 @@ export default async function JobsPage({ searchParams }) {
       what: params?.what,
       where: params?.where,
       page: params?.page,
+      resultsPerPage: JOB_LISTINGS_PAGE_SIZE,
     }),
     serviceListJobApplications(),
     serviceListProfiles(),
