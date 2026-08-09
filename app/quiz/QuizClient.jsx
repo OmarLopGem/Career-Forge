@@ -2,18 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
+import { JOB_ROLE_CATEGORIES } from '@/lib/quiz/job-role-catalog.js'
 import StreakBadge from './components/StreakBadge.jsx'
 
-const jobTypes = [
-  'Frontend Developer',
-  'Backend Developer',
-  'Full Stack Developer',
-  'QA Tester',
-  'Database Developer',
-]
+const defaultJobType = JOB_ROLE_CATEGORIES[0].roles[0]
 
 export default function QuizClient() {
-  const [jobType, setJobType] = useState(jobTypes[0])
+  const [jobType, setJobType] = useState(defaultJobType)
+  const [attemptId, setAttemptId] = useState('')
   const [questions, setQuestions] = useState([])
   const [answers, setAnswers] = useState({})
   const [score, setScore] = useState(null)
@@ -30,31 +26,49 @@ export default function QuizClient() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [quizVersion, setQuizVersion] = useState(0)
+  const [gradingMode, setGradingMode] = useState('')
+  const [aiWarning, setAIWarning] = useState('')
 
   useEffect(() => {
+    const controller = new AbortController()
+    let isCurrentRequest = true
+
     async function loadQuestions() {
       setLoading(true)
       setError('')
 
       try {
-        const data = await requestJson(`/api/quiz?jobType=${encodeURIComponent(jobType)}`)
+        const forceNew = quizVersion > 0 ? '&new=1' : ''
+        const data = await requestJson(
+          `/api/quiz?jobType=${encodeURIComponent(jobType)}${forceNew}`,
+          { signal: controller.signal },
+        )
+        if (!isCurrentRequest) return
+
         setQuestions(data.questions || [])
+        setAttemptId(data.attemptId || '')
         setDifficulty(data.difficulty || 'Beginner')
         setNextDifficulty(data.difficulty || 'Beginner')
+        setAIWarning(data.aiWarning || '')
       } catch (loadError) {
-        console.error('Failed to load quiz questions:', loadError)
+        if (!isCurrentRequest || loadError?.name === 'AbortError') return
         setQuestions([])
         setError(loadError instanceof Error ? loadError.message : 'Unable to load quiz questions.')
       } finally {
-        setLoading(false)
+        if (isCurrentRequest) setLoading(false)
       }
     }
 
     loadQuestions()
+    return () => {
+      isCurrentRequest = false
+      controller.abort()
+    }
   }, [jobType, quizVersion])
 
   const handleJobChange = (value) => {
     setJobType(value)
+    setAttemptId('')
     setAnswers({})
     setScore(null)
     setCorrectCount(0)
@@ -67,6 +81,8 @@ export default function QuizClient() {
     setFeedback('')
     setShowResult(false)
     setError('')
+    setGradingMode('')
+    setAIWarning('')
   }
 
   const handleAnswerChange = (questionId, value) => {
@@ -83,7 +99,7 @@ export default function QuizClient() {
     try {
       const result = await requestJson('/api/quiz/submit', {
         method: 'POST',
-        body: JSON.stringify({ jobType, difficulty, answers }),
+        body: JSON.stringify({ attemptId, jobType, difficulty, answers }),
       })
       setCorrectCount(result.correctCount)
       setTotalQuestions(result.totalQuestions)
@@ -93,6 +109,7 @@ export default function QuizClient() {
       setDifficulty(result.difficulty)
       setNextDifficulty(result.nextDifficulty)
       setFeedback(result.feedback)
+      setGradingMode(result.gradingMode || 'answer-key')
       setQuestionResults(
         Object.fromEntries(
           result.questionResults.map((questionResult) => [
@@ -128,6 +145,7 @@ export default function QuizClient() {
     setFeedback('')
     setShowResult(false)
     setError('')
+    setGradingMode('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -142,6 +160,8 @@ export default function QuizClient() {
     setFeedback('')
     setShowResult(false)
     setError('')
+    setAttemptId('')
+    setGradingMode('')
     setQuizVersion((current) => current + 1)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -157,14 +177,15 @@ export default function QuizClient() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
-      <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-8">
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
           <div>
-            <h1 className="text-4xl font-bold text-navy">AI Interview Quiz</h1>
+            <h1 className="text-3xl font-bold text-navy sm:text-4xl">AI Interview Quiz</h1>
             <p className="mt-2 max-w-2xl text-text-muted">
-              Select a job type and complete its interview questions. Your result is
-              calculated securely and saved to your account. Passing score: 70%.
+              Choose a job role and complete a secure interview-practice quiz. Beginner
+              questions can be generated directly by AI and are saved to the shared
+              question bank. Passing score: 70%.
             </p>
             <span className="mt-4 inline-flex rounded-full bg-blue-soft px-4 py-2 text-sm font-semibold text-brand-blue">
               Current level: {difficulty}
@@ -174,17 +195,22 @@ export default function QuizClient() {
         </div>
 
         <div className="mt-6">
-          <label className="font-semibold text-text-main">Select Job Type</label>
+          <label htmlFor="quiz-job-type" className="font-semibold text-text-main">Select Job Type</label>
 
           <select
+            id="quiz-job-type"
             value={jobType}
             onChange={(event) => handleJobChange(event.target.value)}
             className="mt-2 w-full rounded-xl border border-border bg-white p-3 text-text-main outline-none focus:border-brand-blue"
           >
-            {jobTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
+            {JOB_ROLE_CATEGORIES.map(({ category, roles }) => (
+              <optgroup key={category} label={category}>
+                {roles.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>
@@ -194,11 +220,17 @@ export default function QuizClient() {
             <strong>Quiz Format:</strong> 10 {difficulty} questions using multiple choice and fill in the blanks.
           </p>
           <p className="mt-1">
-            <strong>Progression:</strong> Pass with 70% to unlock the next level. One-line answers are not included.
+            <strong>Progression:</strong> Pass with 70% to unlock the next seeded level.
           </p>
         </div>
 
-        {loading ? <p className="mt-8 text-text-muted">Loading quiz questions...</p> : null}
+        {loading ? <p className="mt-8 text-text-muted" role="status">Preparing your quiz questions...</p> : null}
+
+        {aiWarning ? (
+          <p className="mt-4 rounded-xl bg-orange-soft px-4 py-3 text-sm font-medium text-forge-orange" role="status">
+            AI generation was unavailable, so a stored quiz was loaded. {aiWarning}
+          </p>
+        ) : null}
 
         {!loading && questions.length === 0 ? (
           <p className="mt-8 font-semibold text-red-600">
@@ -214,12 +246,12 @@ export default function QuizClient() {
                   key={question._id}
                   className="rounded-xl border border-border bg-white p-5"
                 >
-                  <div className="mb-3 flex items-start justify-between gap-4">
+                  <div className="mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4">
                     <h2 className="font-semibold text-navy">
                       Q{index + 1}. {question.question}
                     </h2>
 
-                    <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                    <div className="flex shrink-0 flex-wrap justify-start gap-2 sm:justify-end">
                       <span
                         className={`rounded-full px-3 py-1 text-sm font-medium ${difficultyStyles[getDifficulty(question)]}`}
                       >
@@ -271,6 +303,11 @@ export default function QuizClient() {
                           {questionResults[question._id]?.correctAnswer}
                         </p>
                       )}
+                      {questionResults[question._id]?.feedback ? (
+                        <p className="mt-1 text-sm text-text-muted">
+                          {questionResults[question._id].feedback}
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -282,16 +319,16 @@ export default function QuizClient() {
                 type="button"
                 onClick={submitQuiz}
                 disabled={submitting}
-                className="mt-8 rounded-xl bg-brand-blue px-6 py-3 font-medium text-white hover:bg-brand-blue-hover"
+                className="mt-8 w-full rounded-xl bg-brand-blue px-6 py-3 font-medium text-white hover:bg-brand-blue-hover sm:w-auto"
               >
-                {submitting ? 'Calculating...' : 'Submit Quiz'}
+                {submitting ? 'Checking answers...' : 'Submit Quiz'}
               </button>
             ) : null}
           </>
         ) : null}
 
         {error ? (
-          <p className="mt-6 rounded-xl bg-red-50 px-4 py-3 font-medium text-red-600">
+          <p className="mt-6 rounded-xl bg-red-50 px-4 py-3 font-medium text-red-600" role="alert">
             {error}
           </p>
         ) : null}
@@ -314,12 +351,19 @@ export default function QuizClient() {
             )}
 
             <p className="mt-4 text-text-muted">{feedback}</p>
+            <p className="mt-2 text-sm font-medium text-text-muted">
+              {gradingMode === 'ai-assisted'
+                ? 'AI-assisted grading was used for this Beginner attempt.'
+                : gradingMode === 'answer-key-fallback'
+                  ? 'The secure answer-key fallback was used because AI grading was unavailable.'
+                  : 'This level was graded with the secure answer key.'}
+            </p>
 
             {!passed ? (
               <button
                 type="button"
                 onClick={retakeQuiz}
-                className="mt-5 rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700"
+                className="mt-5 w-full rounded-xl bg-red-600 px-6 py-3 font-medium text-white hover:bg-red-700 sm:w-auto"
               >
                 Retake Quiz
               </button>
@@ -327,7 +371,7 @@ export default function QuizClient() {
               <button
                 type="button"
                 onClick={startNextQuiz}
-                className="mt-5 rounded-xl bg-brand-blue px-6 py-3 font-medium text-white hover:bg-brand-blue-hover"
+                className="mt-5 w-full rounded-xl bg-brand-blue px-6 py-3 font-medium text-white hover:bg-brand-blue-hover sm:w-auto"
               >
                 {nextDifficulty === difficulty
                   ? `Practice ${difficulty} Again`
