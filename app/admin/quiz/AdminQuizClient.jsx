@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { requestJson } from '@/lib/job-tracker/client/api.js'
 
 const initialForm = {
@@ -34,8 +34,10 @@ function typeLabel(type) {
   return 'Short answer'
 }
 
-export default function AdminQuizClient({ initialQuestions }) {
+export default function AdminQuizClient({ initialQuestions, initialPagination, initialSummary }) {
   const [questions, setQuestions] = useState(initialQuestions)
+  const [pagination, setPagination] = useState(initialPagination)
+  const [summary, setSummary] = useState(initialSummary)
   const [form, setForm] = useState(initialForm)
   const [aiForm, setAIForm] = useState(initialAIForm)
   const [aiDrafts, setAIDrafts] = useState([])
@@ -44,23 +46,9 @@ export default function AdminQuizClient({ initialQuestions }) {
   const [aiMessage, setAIMessage] = useState('')
   const [aiError, setAIError] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isPageLoading, setIsPageLoading] = useState(false)
+  const [bankError, setBankError] = useState('')
   const [isPending, startTransition] = useTransition()
-
-  const summary = useMemo(() => {
-    const byDifficulty = questions.reduce(
-      (counts, question) => ({
-        ...counts,
-        [question.difficulty]: (counts[question.difficulty] ?? 0) + 1,
-      }),
-      {},
-    )
-    return {
-      total: questions.length,
-      Beginner: byDifficulty.Beginner ?? 0,
-      Intermediate: byDifficulty.Intermediate ?? 0,
-      Advanced: byDifficulty.Advanced ?? 0,
-    }
-  }, [questions])
 
   const updateField = (name, value) => {
     setForm((current) => ({ ...current, [name]: value }))
@@ -112,6 +100,24 @@ export default function AdminQuizClient({ initialQuestions }) {
     })
   }
 
+  const loadQuestionPage = async (page) => {
+    setIsPageLoading(true)
+    setBankError('')
+
+    try {
+      const result = await requestJson(
+        `/api/admin/quiz?page=${page}&pageSize=${pagination.pageSize}`,
+      )
+      setQuestions(result.questions ?? [])
+      setPagination(result.pagination)
+      setSummary(result.summary)
+    } catch (err) {
+      setBankError(err instanceof Error ? err.message : 'Unable to load this question page.')
+    } finally {
+      setIsPageLoading(false)
+    }
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault()
     setMessage('')
@@ -119,16 +125,16 @@ export default function AdminQuizClient({ initialQuestions }) {
 
     startTransition(async () => {
       try {
-        const { question } = await requestJson('/api/admin/quiz', {
+        await requestJson('/api/admin/quiz', {
           method: 'POST',
           body: JSON.stringify({
             ...form,
             options: form.type === 'mcq' ? form.options.split(/\n|,/).map((option) => option.trim()) : [],
           }),
         })
-        setQuestions((current) => [question, ...current])
         setForm(initialForm)
         setMessage('Quiz question added and ready for users to practice.')
+        await loadQuestionPage(1)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to add quiz question.')
       }
@@ -429,15 +435,33 @@ export default function AdminQuizClient({ initialQuestions }) {
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border px-6 py-5">
             <div>
               <h2 className="text-xl font-bold text-navy">Current question bank</h2>
-              <p className="mt-1 text-sm text-text-muted">Newest questions appear first.</p>
+              <p className="mt-1 text-sm text-text-muted">
+                Newest questions appear first. Only {pagination.pageSize} questions load at a time.
+              </p>
             </div>
-            <span className="rounded-full bg-blue-soft px-3 py-1 text-sm font-semibold text-brand-blue">{questions.length} questions</span>
+            <span className="rounded-full bg-blue-soft px-3 py-1 text-sm font-semibold text-brand-blue">
+              {pagination.totalCount === 0
+                ? '0 questions'
+                : `Showing ${(pagination.page - 1) * pagination.pageSize + 1}–${Math.min(
+                    pagination.page * pagination.pageSize,
+                    pagination.totalCount,
+                  )} of ${pagination.totalCount}`}
+            </span>
           </div>
+
+          {bankError ? (
+            <p className="m-6 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600" role="alert">
+              {bankError}
+            </p>
+          ) : null}
 
           {questions.length === 0 ? (
             <p className="p-8 text-center text-sm text-text-muted">No questions have been created yet.</p>
           ) : (
-            <div className="divide-y divide-border">
+            <div
+              className={`divide-y divide-border transition-opacity ${isPageLoading ? 'opacity-45' : 'opacity-100'}`}
+              aria-busy={isPageLoading}
+            >
               {questions.map((question) => (
                 <article key={question._id} className="p-6">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -467,6 +491,15 @@ export default function AdminQuizClient({ initialQuestions }) {
               ))}
             </div>
           )}
+
+          {pagination.totalPages > 1 ? (
+            <Pagination
+              page={pagination.page}
+              totalPages={pagination.totalPages}
+              disabled={isPageLoading}
+              onPageChange={loadQuestionPage}
+            />
+          ) : null}
         </section>
       </div>
     </main>
@@ -489,5 +522,78 @@ function Stat({ label, value, tone }) {
       <p className="text-xs font-semibold uppercase tracking-[0.15em]">{label}</p>
       <p className="mt-2 text-2xl font-bold">{value}</p>
     </div>
+  )
+}
+
+function visiblePages(page, totalPages) {
+  const pages = new Set([1, totalPages, page - 1, page, page + 1])
+  const ordered = [...pages]
+    .filter((value) => value >= 1 && value <= totalPages)
+    .sort((left, right) => left - right)
+  const items = []
+
+  ordered.forEach((value, index) => {
+    if (index > 0 && value - ordered[index - 1] > 1) items.push(`gap-${value}`)
+    items.push(value)
+  })
+  return items
+}
+
+function Pagination({ page, totalPages, disabled, onPageChange }) {
+  return (
+    <nav
+      aria-label="Question bank pages"
+      className="flex flex-col items-center justify-between gap-4 border-t border-border bg-background/60 px-6 py-5 sm:flex-row"
+    >
+      <p className="text-sm font-medium text-text-muted">
+        Page <span className="font-bold text-navy">{page}</span> of {totalPages}
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <PageButton
+          label="Previous"
+          disabled={disabled || page === 1}
+          onClick={() => onPageChange(page - 1)}
+        />
+        {visiblePages(page, totalPages).map((item) => (
+          typeof item === 'number' ? (
+            <button
+              key={item}
+              type="button"
+              aria-label={`Go to page ${item}`}
+              aria-current={item === page ? 'page' : undefined}
+              disabled={disabled}
+              onClick={() => onPageChange(item)}
+              className={`h-10 min-w-10 rounded-xl px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                item === page
+                  ? 'bg-navy text-white shadow-sm'
+                  : 'border border-border bg-white text-text-muted hover:border-brand-blue hover:text-brand-blue'
+              }`}
+            >
+              {item}
+            </button>
+          ) : (
+            <span key={item} aria-hidden="true" className="px-1 text-text-muted">…</span>
+          )
+        ))}
+        <PageButton
+          label="Next"
+          disabled={disabled || page === totalPages}
+          onClick={() => onPageChange(page + 1)}
+        />
+      </div>
+    </nav>
+  )
+}
+
+function PageButton({ label, disabled, onClick }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-navy transition hover:border-brand-blue hover:text-brand-blue disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      {label}
+    </button>
   )
 }
