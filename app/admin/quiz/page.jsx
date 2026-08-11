@@ -16,6 +16,12 @@ export default async function AdminQuizPage() {
     redirect('/calendar')
   }
 
-  const { questions } = await serviceListAdminQuizQuestions()
-  return <AdminQuizClient initialQuestions={serializeForClient(questions)} />
+  const listing = await serviceListAdminQuizQuestions()
+  return (
+    <AdminQuizClient
+      initialQuestions={serializeForClient(listing.questions)}
+      initialPagination={listing.pagination}
+      initialSummary={listing.summary}
+    />
+  )
 }
