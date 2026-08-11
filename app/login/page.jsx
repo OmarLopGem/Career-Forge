@@ -16,6 +16,9 @@ export default async function LoginPage({ searchParams }) {
     : ''
 
   if (user) {
+    if (user.role === 'employer') {
+      redirect('/employer/listings')
+    }
     redirect(redirectTo)
   }
 

@@ -2,16 +2,21 @@ import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminUserProfilePage from './page.jsx'
 
-const { getCurrentUserFromRequest, notFound, redirect, serviceGetAdminUserProfile } = vi.hoisted(
+const { getCurrentUserFromRequest, notFound, redirect, serviceGetAdminUserProfile, useRouterMock } = vi.hoisted(
   () => ({
     getCurrentUserFromRequest: vi.fn(),
     notFound: vi.fn(),
     redirect: vi.fn(),
     serviceGetAdminUserProfile: vi.fn(),
+    useRouterMock: { refresh: vi.fn(), push: vi.fn() },
   }),
 )
 
-vi.mock('next/navigation', () => ({ notFound, redirect }))
+vi.mock('next/navigation', () => ({
+  notFound,
+  redirect,
+  useRouter: () => useRouterMock,
+}))
 
 vi.mock('@/lib/server/auth/current-user.js', () => ({
   getCurrentUserFromRequest,

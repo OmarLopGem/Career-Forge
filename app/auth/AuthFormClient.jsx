@@ -22,7 +22,7 @@ const copyByMode = {
     badge: 'Create Account',
     title: 'Start building your job search system.',
     description:
-      'Create your Mongo-backed Career Forge account to track listings, applications, reminders, and progress in one place.',
+      'Create your Mongo-backed Career Forge account to track listings, applications, reminders, and progress in one place. Employers can register too — accounts are reviewed by an administrator before they can publish jobs.',
     submit: 'Register',
     alternateText: 'Already have an account?',
     alternateHref: '/login',
@@ -40,6 +40,11 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar', notice 
     email: '',
     password: '',
     confirmPassword: '',
+    requestedRole: 'user',
+    companyName: '',
+    companyWebsite: '',
+    companyIndustry: '',
+    companySize: '',
   })
 
   const copy = useMemo(() => copyByMode[mode], [mode])
@@ -72,6 +77,11 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar', notice 
       return
     }
 
+    if (mode === 'register' && form.requestedRole === 'employer' && !form.companyName.trim()) {
+      setError('Company name is required to register as an employer.')
+      return
+    }
+
     if (password && password.length < 8) {
       setError('Password must contain at least 8 characters.')
       return
@@ -79,13 +89,17 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar', notice 
 
     startTransition(async () => {
       try {
-        // Keep login and register in one client while only changing the payload shape.
         const payload = mode === 'register'
           ? {
               firstName: form.firstName.trim(),
               lastName: form.lastName.trim(),
               email,
               password,
+              requestedRole: form.requestedRole,
+              companyName: form.companyName.trim(),
+              companyWebsite: form.companyWebsite.trim(),
+              companyIndustry: form.companyIndustry.trim(),
+              companySize: form.companySize.trim(),
             }
           : {
               email,
@@ -161,6 +175,72 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar', notice 
                     label="Last Name"
                     value={form.lastName}
                     onChange={handleChange('lastName')}
+                  />
+                </div>
+              ) : null}
+
+              {mode === 'register' ? (
+                <div>
+                  <span className="text-sm font-semibold text-navy">I am registering as a</span>
+                  <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                    {[
+                      { value: 'user', label: 'Job Seeker', description: 'Build a CV and apply to jobs.' },
+                      { value: 'employer', label: 'Employer', description: 'Post jobs and review applicants (approval required).' },
+                    ].map((option) => {
+                      const isActive = form.requestedRole === option.value
+                      return (
+                        <label
+                          key={option.value}
+                          className={`flex cursor-pointer flex-col rounded-xl border p-3 text-sm transition ${
+                            isActive
+                              ? 'border-brand-blue bg-blue-soft text-navy'
+                              : 'border-border bg-background text-text-muted hover:border-brand-blue/60'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="requestedRole"
+                              value={option.value}
+                              checked={isActive}
+                              onChange={handleChange('requestedRole')}
+                              className="accent-brand-blue"
+                            />
+                            <span className="font-semibold">{option.label}</span>
+                          </span>
+                          <span className="mt-1 text-xs">{option.description}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              {mode === 'register' && form.requestedRole === 'employer' ? (
+                <div className="grid gap-5 md:grid-cols-2">
+                  <Field
+                    id="companyName"
+                    label="Company Name"
+                    value={form.companyName}
+                    onChange={handleChange('companyName')}
+                  />
+                  <Field
+                    id="companyWebsite"
+                    label="Company Website"
+                    value={form.companyWebsite}
+                    onChange={handleChange('companyWebsite')}
+                  />
+                  <Field
+                    id="companyIndustry"
+                    label="Industry"
+                    value={form.companyIndustry}
+                    onChange={handleChange('companyIndustry')}
+                  />
+                  <Field
+                    id="companySize"
+                    label="Company Size"
+                    value={form.companySize}
+                    onChange={handleChange('companySize')}
                   />
                 </div>
               ) : null}

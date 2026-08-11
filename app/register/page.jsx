@@ -13,6 +13,9 @@ export default async function RegisterPage({ searchParams }) {
   const redirectTo = sanitizeRedirectTo(params?.redirectTo)
 
   if (user) {
+    if (user.role === 'employer') {
+      redirect('/employer/listings')
+    }
     redirect(redirectTo)
   }
 

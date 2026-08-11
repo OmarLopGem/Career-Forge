@@ -53,17 +53,20 @@ function HeaderNavigation({ currentUser = null, pathname }) {
   const router = useRouter();
   const workspaceMenuRef = useRef(null);
   const adminMenuRef = useRef(null);
+  const employerMenuRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDesktopMenu, setOpenDesktopMenu] = useState(null);
   const [openMobileSections, setOpenMobileSections] = useState({
     workspace: false,
     admin: false,
+    employer: false,
   });
   const [isPending, startTransition] = useTransition();
 
   const isLoggedIn = !!currentUser;
   const isAdmin = currentUser?.role === "admin";
+  const isEmployer = currentUser?.role === "employer";
 
   const publicLinks = [
     {
@@ -116,6 +119,10 @@ function HeaderNavigation({ currentUser = null, pathname }) {
       href: "/admin/users",
     },
     {
+      name: "Admin Employers",
+      href: "/admin/employers",
+    },
+    {
       name: "Admin Notifications",
       href: "/admin/notifications",
     },
@@ -130,6 +137,17 @@ function HeaderNavigation({ currentUser = null, pathname }) {
     {
       name: "Admin Support",
       href: "/admin/support",
+    },
+  ];
+
+  const employerLinks = [
+    {
+      name: "My Listings",
+      href: "/employer/listings",
+    },
+    {
+      name: "Applicants",
+      href: "/employer/applicants",
     },
   ];
 
@@ -174,7 +192,8 @@ function HeaderNavigation({ currentUser = null, pathname }) {
       const target = event.target;
       const clickedWorkspace = workspaceMenuRef.current?.contains(target);
       const clickedAdmin = adminMenuRef.current?.contains(target);
-      if (!clickedWorkspace && !clickedAdmin) {
+      const clickedEmployer = employerMenuRef.current?.contains(target);
+      if (!clickedWorkspace && !clickedAdmin && !clickedEmployer) {
         setOpenDesktopMenu(null);
       }
     }
@@ -269,6 +288,50 @@ function HeaderNavigation({ currentUser = null, pathname }) {
                     className="absolute right-0 top-full mt-3 min-w-56 rounded-2xl border border-border bg-surface p-2 shadow-xl"
                   >
                     {workspaceLinks.map((link) => {
+                      const isActive = isActiveLink(link.href);
+                      return (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          className={`block rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                            isActive
+                              ? "bg-blue-soft text-brand-blue"
+                              : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                          }`}
+                        >
+                          {link.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {isEmployer ? (
+              <div ref={employerMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => toggleDesktopMenu("employer")}
+                  aria-expanded={openDesktopMenu === "employer"}
+                  aria-haspopup="menu"
+                  className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                    openDesktopMenu === "employer" ||
+                    employerLinks.some((link) => isActiveLink(link.href))
+                      ? "bg-blue-soft text-brand-blue"
+                      : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
+                  }`}
+                >
+                  Employer
+                  <ChevronIcon isOpen={openDesktopMenu === "employer"} className="h-4 w-4" />
+                </button>
+
+                {openDesktopMenu === "employer" ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full mt-3 min-w-56 rounded-2xl border border-border bg-surface p-2 shadow-xl"
+                  >
+                    {employerLinks.map((link) => {
                       const isActive = isActiveLink(link.href);
                       return (
                         <Link
@@ -473,7 +536,7 @@ function HeaderNavigation({ currentUser = null, pathname }) {
                       );
                     })}
                   </div>
-                ) : null}
+) : null}
               </div>
             ) : null}
 
