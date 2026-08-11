@@ -52,6 +52,8 @@ Más detalle en [`architecture/overview.md`](architecture/overview.md).
 
 - [`features/cv-assistant.md`](features/cv-assistant.md) — Asistente de CV (wizard + IA + PDF).
 - [`features/job-tracker.md`](features/job-tracker.md) — Job tracker (listings + applications + calendar + employer portal).
+- [`features/quiz.md`](features/quiz.md) — Motor de quiz (start / submit / grading / racha / generación IA).
+- [`features/admin.md`](features/admin.md) — Consola admin (usuarios, employers, notificaciones, soporte, override de CV).
 
 ## Cómo usar esta documentación
 
