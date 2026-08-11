@@ -13,7 +13,8 @@
     "seed:job-listings": "node scripts/seed-job-listings.mjs",
     "seed:admin": "node scripts/seed-admin.mjs",
     "seed:quiz": "node scripts/seed-quiz.mjs",
-    "seed:quiz:ai": "node scripts/seed-quiz-ai.mjs"
+    "seed:quiz:ai": "node scripts/seed-quiz-ai.mjs",
+    "docs:export": "node scripts/export-diagrams.mjs"
   },
   "dependencies": {
     "mongodb": "^6.21.0",
@@ -25,6 +26,7 @@
     "unpdf": "^1.6.2"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.16.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
