@@ -318,7 +318,7 @@ export default async function AdminUserProfilePage({ params }) {
         </section>
 
         <section className="grid gap-8 xl:grid-cols-2">
-          <div className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+          <div className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
               Quiz Activity
             </p>
@@ -352,7 +352,7 @@ export default async function AdminUserProfilePage({ params }) {
             )}
           </div>
 
-          <div className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+          <div className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
               Support Activity
             </p>
