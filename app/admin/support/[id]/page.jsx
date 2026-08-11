@@ -53,8 +53,8 @@ export default async function AdminSupportThreadPage({ params }) {
   const decoratedMessages = messages.map(decorateMessage);
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
-      <div className="mx-auto max-w-3xl rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-3xl rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
         <Link
           href="/admin/support"
           className="text-sm font-semibold text-brand-blue hover:underline"

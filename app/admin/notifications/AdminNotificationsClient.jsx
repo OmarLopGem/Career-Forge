@@ -57,9 +57,9 @@ export default function AdminNotificationsClient({ initialNotifications }) {
   }
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
             Admin Notifications
           </p>
@@ -122,7 +122,7 @@ export default function AdminNotificationsClient({ initialNotifications }) {
               />
             </label>
 
-            <div className="md:col-span-2 flex flex-wrap items-center gap-3">
+            <div className="md:col-span-2 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <button
                 type="submit"
                 disabled={isPending}
@@ -136,7 +136,7 @@ export default function AdminNotificationsClient({ initialNotifications }) {
           </form>
         </section>
 
-        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <h2 className="text-2xl font-bold text-navy">Notification history</h2>
 
           {notifications.length === 0 ? (

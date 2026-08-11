@@ -31,12 +31,12 @@ export default async function NotificationsPage() {
   const { notifications } = await serviceListMyNotifications()
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
-      <div className="mx-auto max-w-5xl rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-5xl rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
           Notifications
         </p>
-        <h1 className="mt-4 text-4xl font-bold text-navy">Updates for your account</h1>
+        <h1 className="mt-4 text-3xl font-bold text-navy sm:text-4xl">Updates for your account</h1>
         <p className="mt-3 max-w-3xl text-sm text-text-muted">
           These announcements are private to signed-in users and are shown here only when they are active.
         </p>

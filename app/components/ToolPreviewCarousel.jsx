@@ -145,7 +145,7 @@ export default function ToolPreviewCarousel() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-12">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-3xl font-bold text-navy md:text-4xl">
@@ -190,8 +190,8 @@ export default function ToolPreviewCarousel() {
             href={item.href}
             className={`group flex-none snap-start overflow-hidden rounded-[2rem] border p-6 transition-[border-color,box-shadow,background-color] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/30 ${
               activeIndex === index
-                ? 'w-[85%] border-brand-blue/80 bg-white shadow-[0_24px_60px_-34px_rgba(37,99,235,0.28)] sm:w-[460px] lg:w-[620px]'
-                : 'w-[85%] border-border bg-surface shadow-[0_18px_40px_-32px_rgba(15,23,42,0.22)] hover:border-brand-blue/60 hover:bg-white hover:shadow-[0_24px_60px_-34px_rgba(15,23,42,0.26)] sm:w-[460px] lg:w-[620px]'
+                ? 'w-[88%] border-brand-blue/80 bg-white shadow-[0_24px_60px_-34px_rgba(37,99,235,0.28)] sm:w-[460px] lg:w-[620px]'
+                : 'w-[88%] border-border bg-surface shadow-[0_18px_40px_-32px_rgba(15,23,42,0.22)] hover:border-brand-blue/60 hover:bg-white hover:shadow-[0_24px_60px_-34px_rgba(15,23,42,0.26)] sm:w-[460px] lg:w-[620px]'
             }`}
           >
             <div className="flex items-center justify-between gap-3">

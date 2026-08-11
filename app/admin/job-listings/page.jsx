@@ -58,15 +58,15 @@ export default async function AdminJobListingsPage() {
   const { jobListings, summary } = await serviceListAdminJobListings()
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-7xl space-y-8">
-        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
                 Catalog oversight
               </p>
-              <h1 className="mt-3 text-4xl font-bold text-navy">Job listing monitor</h1>
+              <h1 className="mt-3 text-3xl font-bold text-navy sm:text-4xl">Job listing monitor</h1>
               <p className="mt-3 max-w-2xl text-text-muted">
                 Review the openings available to Career Forge users, including their source,
                 category, skills, and publication status.
@@ -126,7 +126,7 @@ export default async function AdminJobListingsPage() {
                       ) : null}
                     </div>
 
-                    <dl className="grid min-w-72 gap-3 rounded-2xl border border-border bg-background p-4 text-sm sm:grid-cols-2 xl:grid-cols-1">
+                  <dl className="grid w-full gap-3 rounded-2xl border border-border bg-background p-4 text-sm sm:grid-cols-2 xl:min-w-72 xl:max-w-xs xl:grid-cols-1">
                       <div>
                         <dt className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted">Source</dt>
                         <dd className="mt-1 font-semibold text-navy">{listing.source || 'Not provided'}</dd>

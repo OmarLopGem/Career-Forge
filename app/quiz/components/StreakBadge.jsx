@@ -33,6 +33,14 @@ export default function StreakBadge({
         const data = await requestJson('/api/quiz/streak')
         if (!cancelled) setStreak(data)
       } catch (error) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'status' in error &&
+          [401, 403].includes(error.status)
+        ) {
+          return
+        }
         console.error('Failed to load quiz streak:', error)
       } finally {
         if (!cancelled) setLoading(false)

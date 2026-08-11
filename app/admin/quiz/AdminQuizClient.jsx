@@ -142,9 +142,9 @@ export default function AdminQuizClient({ initialQuestions, initialPagination, i
   }
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-7xl space-y-8">
-        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">Quiz library</p>
           <h1 className="mt-3 text-4xl font-bold text-navy">Create practice questions</h1>
           <p className="mt-3 max-w-3xl text-text-muted">
@@ -159,7 +159,7 @@ export default function AdminQuizClient({ initialQuestions, initialPagination, i
           </div>
         </section>
 
-        <section className="relative overflow-hidden rounded-[2rem] bg-navy p-8 text-white shadow-xl">
+        <section className="relative overflow-hidden rounded-[2rem] bg-navy p-5 text-white shadow-xl sm:p-8">
           <div
             aria-hidden="true"
             className="absolute -right-16 -top-20 h-56 w-56 rounded-full border-[32px] border-forge-orange/20"

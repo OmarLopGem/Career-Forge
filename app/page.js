@@ -94,7 +94,7 @@ export default async function Home() {
 
   return (
     <div className="bg-background">
-      <section className="max-w-7xl mx-auto px-6 py-20 md:py-28">
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
           <div>
             <span className="inline-flex items-center rounded-full bg-blue-soft px-4 py-2 text-sm font-medium text-brand-blue">

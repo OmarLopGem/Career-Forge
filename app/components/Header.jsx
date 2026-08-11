@@ -4,7 +4,11 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { requestJsonWithoutBody } from "@/lib/job-tracker/client/api.js";
+import { requestJson, requestJsonWithoutBody } from "@/lib/job-tracker/client/api.js";
+
+const NOTIFICATION_BADGE_MAX = 99;
+const NOTIFICATION_POLL_INTERVAL_MS = 30_000;
+const NOTIFICATION_SEEN_KEY_PREFIX = "career-forge.notifications.last-seen";
 
 function BellIcon({ className = "" }) {
   return (
@@ -42,6 +46,44 @@ function ChevronIcon({ isOpen = false, className = "" }) {
   );
 }
 
+function getNotificationSeenStorageKey(userId) {
+  return `${NOTIFICATION_SEEN_KEY_PREFIX}:${userId}`;
+}
+
+function readLastSeenNotification(userId) {
+  if (typeof window === "undefined" || !userId) return null;
+  return window.localStorage.getItem(getNotificationSeenStorageKey(userId));
+}
+
+function writeLastSeenNotification(userId, value) {
+  if (typeof window === "undefined" || !userId || !value) return;
+  window.localStorage.setItem(getNotificationSeenStorageKey(userId), value);
+}
+
+function getLatestNotificationTimestamp(notifications) {
+  if (!Array.isArray(notifications) || notifications.length === 0) return null;
+
+  return notifications.reduce((latest, notification) => {
+    const candidate = String(notification?.createdAt ?? "").trim();
+    if (!candidate) return latest;
+    if (!latest) return candidate;
+    return new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
+  }, null);
+}
+
+function countUnreadNotifications(notifications, lastSeenAt) {
+  if (!Array.isArray(notifications) || notifications.length === 0) return 0;
+  if (!lastSeenAt) return notifications.length;
+
+  const seenTime = new Date(lastSeenAt).getTime();
+  if (Number.isNaN(seenTime)) return notifications.length;
+
+  return notifications.filter((notification) => {
+    const createdAt = new Date(String(notification?.createdAt ?? "")).getTime();
+    return Number.isFinite(createdAt) && createdAt > seenTime;
+  }).length;
+}
+
 // The header reads the server-provided user snapshot and derives the navigation
 // model locally so role-based links stay consistent across desktop and mobile.
 export default function Header({ currentUser = null }) {
@@ -63,6 +105,7 @@ function HeaderNavigation({ currentUser = null, pathname }) {
     employer: false,
   });
   const [isPending, startTransition] = useTransition();
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const isLoggedIn = !!currentUser;
   const isAdmin = currentUser?.role === "admin";
@@ -203,6 +246,70 @@ function HeaderNavigation({ currentUser = null, pathname }) {
       document.removeEventListener("mousedown", handlePointerDown);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn || !currentUser?._id) {
+      setUnreadNotificationCount(0);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    async function loadNotificationBadge() {
+      try {
+        const data = await requestJson("/api/notifications");
+        if (cancelled) return;
+
+        const notifications = Array.isArray(data?.notifications) ? data.notifications : [];
+        const latestNotificationAt = getLatestNotificationTimestamp(notifications);
+
+        if (pathname.startsWith("/notifications")) {
+          if (latestNotificationAt) {
+            writeLastSeenNotification(currentUser._id, latestNotificationAt);
+          }
+          setUnreadNotificationCount(0);
+          return;
+        }
+
+        const lastSeenAt = readLastSeenNotification(currentUser._id);
+        setUnreadNotificationCount(countUnreadNotifications(notifications, lastSeenAt));
+      } catch (error) {
+        if (cancelled || error?.name === "AbortError") return;
+        if (error?.status === 401 || error?.status === 403) {
+          setUnreadNotificationCount(0);
+          return;
+        }
+        console.error("Failed to load notification badge:", error);
+      }
+    }
+
+    function refreshWhenVisible() {
+      if (document.visibilityState === "visible") {
+        void loadNotificationBadge();
+      }
+    }
+
+    void loadNotificationBadge();
+    const intervalId = window.setInterval(loadNotificationBadge, NOTIFICATION_POLL_INTERVAL_MS);
+    window.addEventListener("focus", loadNotificationBadge);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", loadNotificationBadge);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [currentUser?._id, isLoggedIn, pathname]);
+
+  const notificationCountLabel =
+    unreadNotificationCount > NOTIFICATION_BADGE_MAX
+      ? `${NOTIFICATION_BADGE_MAX}+`
+      : String(unreadNotificationCount);
+  const notificationLinkLabel =
+    unreadNotificationCount > 0
+      ? `Notifications (${notificationCountLabel} new)`
+      : "Notifications";
 
   return (
     <header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-md border-b border-border">
@@ -400,15 +507,23 @@ function HeaderNavigation({ currentUser = null, pathname }) {
               <>
                 <Link
                   href="/notifications"
-                  aria-label="Notifications"
-                  title="Notifications"
-                  className={`ml-2 rounded-xl p-3 transition-all duration-300 ${
+                  aria-label={notificationLinkLabel}
+                  title={notificationLinkLabel}
+                  className={`relative ml-2 rounded-xl p-3 transition-all duration-300 ${
                     isActiveLink("/notifications")
                       ? "bg-blue-soft text-brand-blue"
                       : "text-text-muted hover:bg-cyan-soft hover:text-brand-blue"
                   }`}
                 >
                   <BellIcon className="h-5 w-5" />
+                  {unreadNotificationCount > 0 ? (
+                    <span
+                      aria-label={`${notificationCountLabel} new notifications`}
+                      className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white"
+                    >
+                      {notificationCountLabel}
+                    </span>
+                  ) : null}
                 </Link>
 
                 <Link

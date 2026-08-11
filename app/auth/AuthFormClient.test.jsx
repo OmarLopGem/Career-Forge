@@ -127,6 +127,8 @@ describe('AuthFormClient', () => {
     })
 
     expect(push).not.toHaveBeenCalled()
+  })
+
   it('shows a revoked-access notice on the login form', () => {
     render(
       <AuthFormClient

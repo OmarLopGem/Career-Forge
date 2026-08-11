@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Header from './Header.jsx'
+
+const { requestJson, requestJsonWithoutBody } = vi.hoisted(() => ({
+  requestJson: vi.fn(),
+  requestJsonWithoutBody: vi.fn(),
+}))
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/',
@@ -11,7 +17,48 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
+vi.mock('@/lib/job-tracker/client/api.js', () => ({
+  requestJson,
+  requestJsonWithoutBody,
+}))
+
 describe('Header', () => {
+  beforeEach(() => {
+    requestJson.mockReset()
+    requestJsonWithoutBody.mockReset()
+    requestJson.mockResolvedValue({ notifications: [] })
+    window.localStorage.clear()
+  })
+
+  it('shows a notification badge when there are unseen notifications', async () => {
+    requestJson.mockResolvedValue({
+      notifications: [
+        {
+          _id: 'notification-1',
+          createdAt: '2026-08-11T10:00:00.000Z',
+          title: 'System update',
+        },
+      ],
+    })
+
+    render(
+      <Header
+        currentUser={{
+          _id: 'user-1',
+          firstName: 'Omar',
+          lastName: 'Lopez',
+          email: 'omar@example.com',
+          role: 'user',
+          status: 'active',
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('1 new notifications')).toBeInTheDocument()
+    })
+  })
+
   it('shows login and register actions for visitors', () => {
     render(<Header currentUser={null} />)
 

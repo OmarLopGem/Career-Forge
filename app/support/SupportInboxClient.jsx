@@ -117,8 +117,8 @@ export default function SupportInboxClient({
   }
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
-      <div className="mx-auto max-w-4xl rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-4xl rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
@@ -159,7 +159,7 @@ export default function SupportInboxClient({
           })}
         </div>
 
-        <div className="mt-4 flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3 text-sm text-text-muted">
+        <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>
             <span className="font-semibold text-navy">{activeCount}</span> / {activeLimit} open tickets
           </span>
@@ -254,7 +254,7 @@ export default function SupportInboxClient({
               </label>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
               <button
                 type="button"
                 onClick={closeModal}

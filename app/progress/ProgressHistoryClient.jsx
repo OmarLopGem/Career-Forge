@@ -164,7 +164,7 @@ export default function ProgressHistoryClient({
 
   return (
     <>
-      <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+      <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
@@ -264,7 +264,7 @@ export default function ProgressHistoryClient({
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+      <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
         <div className="flex flex-col gap-2">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
             CV Grade History
@@ -368,7 +368,7 @@ export default function ProgressHistoryClient({
       </section>
 
       <section className="grid gap-8 xl:grid-cols-2">
-        <div className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <div className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
             Quiz History
           </p>
@@ -409,7 +409,7 @@ export default function ProgressHistoryClient({
           )}
         </div>
 
-        <div className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <div className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
             Application History
           </p>
@@ -480,7 +480,7 @@ export default function ProgressHistoryClient({
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+      <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
         <div className="flex flex-col gap-2">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
             Best by Job Type

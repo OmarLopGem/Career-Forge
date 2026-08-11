@@ -52,13 +52,13 @@ export default async function ProgressPage() {
   const { summary, profileProgress } = overview
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
             Progress
           </p>
-          <h1 className="mt-4 text-4xl font-bold text-navy">
+          <h1 className="mt-4 text-3xl font-bold text-navy sm:text-4xl">
             Private progress dashboard for {currentUser.firstName}
           </h1>
           <p className="mt-3 max-w-3xl text-sm text-text-muted">
@@ -94,7 +94,7 @@ export default async function ProgressPage() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <div className="flex flex-col gap-2">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
               CV Profiles

@@ -10,7 +10,6 @@ function createFormState(account, currentUser) {
     lastName: account?.lastName ?? currentUser?.lastName ?? '',
     email: account?.email ?? currentUser?.email ?? '',
     dateOfBirth: account?.dateOfBirth ?? '',
-    photoUrl: account?.photoUrl ?? '',
     headline: account?.headline ?? '',
     phone: account?.phone ?? '',
     location: account?.location ?? '',
@@ -25,7 +24,6 @@ function buildPayload(form) {
     firstName: form.firstName,
     lastName: form.lastName,
     dateOfBirth: form.dateOfBirth,
-    photoUrl: form.photoUrl,
     headline: form.headline,
     phone: form.phone,
     location: form.location,
@@ -128,7 +126,7 @@ export default function ProfileClient({
   }
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-6xl space-y-8">
         {warnings.length > 0 ? (
           <section
@@ -152,7 +150,7 @@ export default function ProfileClient({
           </section>
         ) : null}
 
-        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <div className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
@@ -178,78 +176,136 @@ export default function ProfileClient({
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-8">
-            <div>
-              <h2 className="text-2xl font-bold text-navy">Account details</h2>
-              <p className="mt-2 text-sm text-text-muted">
-                These are the unique user details that stay the same across your professional profiles.
-              </p>
+            <div className="rounded-[1.75rem] border border-border bg-background/80 p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-navy">Account details</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-text-muted">
+                    These details stay consistent across your professional CV profiles and help
+                    keep your workspace organized.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-muted">
+                  <p className="font-semibold text-navy">Shared identity layer</p>
+                  <p className="mt-1">Used across profile, progress, job tracking, and support.</p>
+                </div>
+              </div>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
-              <Field
-                id="firstName"
-                label="First Name"
-                value={form.firstName}
-                onChange={(value) => setForm((current) => ({ ...current, firstName: value }))}
-              />
-              <Field
-                id="lastName"
-                label="Last Name"
-                value={form.lastName}
-                onChange={(value) => setForm((current) => ({ ...current, lastName: value }))}
-              />
-              <Field id="email" label="Email" type="email" value={form.email} disabled />
-              <Field
-                id="dateOfBirth"
-                label="Date of Birth"
-                type="date"
-                value={form.dateOfBirth}
-                onChange={(value) => setForm((current) => ({ ...current, dateOfBirth: value }))}
-              />
-              <Field
-                id="photoUrl"
-                label="Photo URL"
-                value={form.photoUrl}
-                onChange={(value) => setForm((current) => ({ ...current, photoUrl: value }))}
-              />
-              <Field
-                id="headline"
-                label="Account Headline"
-                value={form.headline}
-                onChange={(value) => setForm((current) => ({ ...current, headline: value }))}
-              />
-              <Field
-                id="phone"
-                label="Phone"
-                value={form.phone}
-                onChange={(value) => setForm((current) => ({ ...current, phone: value }))}
-              />
-              <Field
-                id="location"
-                label="Location"
-                value={form.location}
-                onChange={(value) => setForm((current) => ({ ...current, location: value }))}
-              />
-              <Field
-                id="linkedinUrl"
-                label="LinkedIn URL"
-                value={form.linkedinUrl}
-                onChange={(value) => setForm((current) => ({ ...current, linkedinUrl: value }))}
-              />
-              <Field
-                id="githubUrl"
-                label="GitHub URL"
-                value={form.githubUrl}
-                onChange={(value) => setForm((current) => ({ ...current, githubUrl: value }))}
-              />
-            </div>
+            <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+              <div className="space-y-6">
+                <FormSection
+                  eyebrow="Identity"
+                  title="Basic account information"
+                  description="Your core personal details and the email tied to this Career Forge account."
+                >
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field
+                      id="firstName"
+                      label="First Name"
+                      value={form.firstName}
+                      onChange={(value) => setForm((current) => ({ ...current, firstName: value }))}
+                    />
+                    <Field
+                      id="lastName"
+                      label="Last Name"
+                      value={form.lastName}
+                      onChange={(value) => setForm((current) => ({ ...current, lastName: value }))}
+                    />
+                    <Field
+                      id="email"
+                      label="Email"
+                      type="email"
+                      value={form.email}
+                      disabled
+                      hint="This is managed by your account and cannot be edited here."
+                    />
+                    <Field
+                      id="dateOfBirth"
+                      label="Date of Birth"
+                      type="date"
+                      value={form.dateOfBirth}
+                      onChange={(value) => setForm((current) => ({ ...current, dateOfBirth: value }))}
+                    />
+                  </div>
+                </FormSection>
 
-            <Field
-              id="portfolioUrl"
-              label="Portfolio URL"
-              value={form.portfolioUrl}
-              onChange={(value) => setForm((current) => ({ ...current, portfolioUrl: value }))}
-            />
+                <FormSection
+                  eyebrow="Professional"
+                  title="Career-facing summary"
+                  description="A short headline and location that help describe your professional direction."
+                >
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field
+                      id="headline"
+                      label="Professional Headline"
+                      value={form.headline}
+                      onChange={(value) => setForm((current) => ({ ...current, headline: value }))}
+                      placeholder="Frontend developer focused on React and UX"
+                      className="md:col-span-2"
+                    />
+                    <Field
+                      id="location"
+                      label="Location"
+                      value={form.location}
+                      onChange={(value) => setForm((current) => ({ ...current, location: value }))}
+                      placeholder="Toronto, ON"
+                    />
+                    <Field
+                      id="phone"
+                      label="Phone"
+                      value={form.phone}
+                      onChange={(value) => setForm((current) => ({ ...current, phone: value }))}
+                      placeholder="+1 555 0100"
+                    />
+                  </div>
+                </FormSection>
+              </div>
+
+              <div className="space-y-6">
+                <FormSection
+                  eyebrow="Links"
+                  title="Professional presence"
+                  description="Add the links you actually use so your account stays relevant and clean."
+                >
+                  <div className="space-y-4">
+                    <Field
+                      id="linkedinUrl"
+                      label="LinkedIn URL"
+                      value={form.linkedinUrl}
+                      onChange={(value) => setForm((current) => ({ ...current, linkedinUrl: value }))}
+                      placeholder="https://linkedin.com/in/your-name"
+                    />
+                    <Field
+                      id="githubUrl"
+                      label="GitHub URL"
+                      value={form.githubUrl}
+                      onChange={(value) => setForm((current) => ({ ...current, githubUrl: value }))}
+                      placeholder="https://github.com/your-name"
+                    />
+                    <Field
+                      id="portfolioUrl"
+                      label="Portfolio URL"
+                      value={form.portfolioUrl}
+                      onChange={(value) => setForm((current) => ({ ...current, portfolioUrl: value }))}
+                      placeholder="https://yourportfolio.dev"
+                    />
+                  </div>
+                </FormSection>
+
+                <div className="rounded-[1.75rem] border border-border bg-navy p-6 text-white shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-soft">
+                    Profile note
+                  </p>
+                  <h3 className="mt-3 text-xl font-bold">Keep this section concise</h3>
+                  <p className="mt-3 text-sm leading-6 text-blue-soft">
+                    This account form is for your stable information. More tailored resume content
+                    belongs in your CV profiles inside CV Assistant.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             {message ? (
               <p className="rounded-xl bg-blue-soft px-4 py-3 text-sm font-medium text-brand-blue">
@@ -263,22 +319,26 @@ export default function ProfileClient({
               </p>
             ) : null}
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col gap-4 rounded-[1.75rem] border border-border bg-background/80 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-navy">Ready to save your account details?</p>
+                <p className="mt-1 text-sm text-text-muted">
+                  Last updated on {formatDate(account.updatedAt)}.
+                </p>
+              </div>
+
               <button
                 type="submit"
                 disabled={isPending}
-                className="rounded-xl bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-hover disabled:opacity-70"
+                className="inline-flex items-center justify-center rounded-xl bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue-hover disabled:opacity-70"
               >
                 {isPending ? 'Saving...' : 'Save account details'}
               </button>
-              <p className="text-sm text-text-muted">
-                Last updated: {formatDate(account.updatedAt)}
-              </p>
             </div>
           </form>
         </section>
 
-        <section className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm">
+        <section className="rounded-[2rem] border border-border bg-surface p-5 shadow-sm sm:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-blue">
@@ -375,18 +435,41 @@ export default function ProfileClient({
   )
 }
 
-function Field({ id, label, type = 'text', value, onChange, disabled = false }) {
+function FormSection({ eyebrow, title, description, children }) {
   return (
-    <label className="block">
-      <span className="text-sm font-semibold text-navy">{label}</span>
+    <section className="rounded-[1.75rem] border border-border bg-white p-6 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-blue">{eyebrow}</p>
+      <h3 className="mt-3 text-xl font-bold text-navy">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-text-muted">{description}</p>
+      <div className="mt-5">{children}</div>
+    </section>
+  )
+}
+
+function Field({
+  id,
+  label,
+  type = 'text',
+  value,
+  onChange,
+  disabled = false,
+  placeholder = '',
+  hint = '',
+  className = '',
+}) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">{label}</span>
       <input
         id={id}
         type={type}
         value={value}
         disabled={disabled}
+        placeholder={placeholder}
         onChange={(event) => onChange?.(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-main outline-none transition focus:border-brand-blue disabled:cursor-not-allowed disabled:opacity-70"
+        className="mt-2 w-full rounded-2xl border border-border bg-background/90 px-4 py-3.5 text-sm text-text-main outline-none transition focus:border-brand-blue focus:bg-white disabled:cursor-not-allowed disabled:border-border/70 disabled:bg-slate-100 disabled:text-text-muted"
       />
+      {hint ? <p className="mt-2 text-xs text-text-muted">{hint}</p> : null}
     </label>
   )
 }

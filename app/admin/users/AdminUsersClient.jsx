@@ -691,9 +691,9 @@ export default function AdminUsersClient({
   }, [handleSearchClear, isSearching, query, renderAction, users])
 
   return (
-    <main className="min-h-screen bg-background px-6 py-10">
-      <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
-        <h1 className="text-4xl font-bold text-navy">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-8">
+        <h1 className="text-3xl font-bold text-navy sm:text-4xl">
           Admin User Management
         </h1>
 
@@ -787,7 +787,7 @@ export default function AdminUsersClient({
           </div>
 
           <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-            <table className="w-full border-collapse bg-white text-left">
+            <table className="min-w-[720px] w-full border-collapse bg-white text-left">
               <thead className="bg-blue-soft">
                 <tr>
                   <th className="p-3">Name</th>

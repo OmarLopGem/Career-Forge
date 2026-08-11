@@ -258,8 +258,8 @@ export default function JobsClient({
   }
 
   return (
-    <div className="bg-background min-h-screen">
-      <section className="max-w-7xl mx-auto px-6 py-10">
+    <div className="min-h-screen bg-background">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span
@@ -282,7 +282,7 @@ export default function JobsClient({
 
           <Link
             href="/calendar"
-            className="inline-flex items-center justify-center rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover sm:w-auto"
           >
             Open Calendar Tracker
           </Link>
@@ -294,7 +294,7 @@ export default function JobsClient({
           </p>
         ) : null}
 
-        <section className="mt-6 rounded-[2rem] border border-border bg-surface p-5 shadow-sm">
+        <section className="mt-6 rounded-[2rem] border border-border bg-surface p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-lg font-bold text-navy">Live search</h2>
@@ -353,14 +353,14 @@ export default function JobsClient({
 
             <button
               type="submit"
-              className="mt-6 rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover"
+              className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover lg:mt-6"
             >
               Search jobs
             </button>
 
             <Link
               href="/jobs"
-              className="mt-6 inline-flex items-center justify-center rounded-xl border border-border px-5 py-3 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue"
+              className="inline-flex items-center justify-center rounded-xl border border-border px-5 py-3 text-sm font-semibold text-text-muted transition-colors hover:border-brand-blue hover:text-brand-blue lg:mt-6"
             >
               Clear
             </Link>
@@ -368,7 +368,7 @@ export default function JobsClient({
 
         </section>
 
-        <div className="mt-6 rounded-[2rem] border border-border bg-surface p-5 shadow-sm">
+        <div className="mt-6 rounded-[2rem] border border-border bg-surface p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-lg font-bold text-navy">Profile used for tracking</h2>
@@ -378,7 +378,7 @@ export default function JobsClient({
             </div>
 
             {cvProfiles.length > 0 ? (
-              <label className="block min-w-[280px]">
+              <label className="block w-full lg:max-w-sm">
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
                   CV Profile
                 </span>
@@ -424,14 +424,14 @@ export default function JobsClient({
               placement="top"
             />
 
-            <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {jobListings.map((listing) => {
                 const trackedApplication = trackedByListingId.get(listing._id)
 
                 return (
                   <article
                     key={listing._id}
-                    className="border border-border bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                    className="border border-border bg-surface p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md sm:p-6"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -463,7 +463,7 @@ export default function JobsClient({
                       </div>
                     ) : null}
 
-                    <div className="mt-6 flex items-center justify-between gap-4">
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Estimated salary</p>
                         <p className="mt-2 text-sm font-semibold text-navy">

@@ -76,7 +76,7 @@ export default function SupportThreadClient({
 
   return (
     <div className="mt-6 flex flex-col gap-4">
-      <div className="flex max-h-[480px] flex-col gap-3 overflow-y-auto rounded-3xl border border-border bg-background p-5">
+      <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto rounded-3xl border border-border bg-background p-4 sm:max-h-[480px] sm:p-5">
         {messages.length === 0 ? (
           <p className="text-sm text-text-muted">No messages yet.</p>
         ) : (
@@ -89,7 +89,7 @@ export default function SupportThreadClient({
                 className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-3xl px-4 py-3 text-sm leading-6 shadow-sm ${
+                  className={`max-w-[92%] rounded-3xl px-4 py-3 text-sm leading-6 shadow-sm sm:max-w-[80%] ${
                     isAdmin
                       ? "bg-blue-soft text-navy"
                       : "bg-surface border border-border text-text-main"
@@ -132,7 +132,7 @@ export default function SupportThreadClient({
             <button
               type="submit"
               disabled={submitting || !body.trim()}
-              className="rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover disabled:opacity-60"
+              className="w-full rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-brand-blue-hover disabled:opacity-60 sm:w-auto"
             >
               {submitting ? "Sending..." : "Send"}
             </button>

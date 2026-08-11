@@ -120,10 +120,10 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar', notice 
   }
 
   return (
-    <div className="bg-background min-h-screen">
-      <section className="max-w-6xl mx-auto px-6 py-14">
+    <div className="min-h-screen bg-background">
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-border bg-navy p-8 text-white md:p-10">
+          <div className="rounded-[2rem] border border-border bg-navy p-6 text-white md:p-10">
             <span className="inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-blue-100">
               {copy.badge}
             </span>
@@ -150,7 +150,7 @@ export default function AuthFormClient({ mode, redirectTo = '/calendar', notice 
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-border bg-surface p-8 shadow-sm md:p-10">
+          <div className="rounded-[2rem] border border-border bg-surface p-6 shadow-sm md:p-10">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <h2 className="text-2xl font-bold text-navy">

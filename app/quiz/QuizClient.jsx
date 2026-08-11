@@ -191,7 +191,7 @@ export default function QuizClient() {
               Current level: {difficulty}
             </span>
           </div>
-          <StreakBadge className="min-w-[220px]" />
+          <StreakBadge className="w-full lg:min-w-[220px]" />
         </div>
 
         <div className="mt-6">

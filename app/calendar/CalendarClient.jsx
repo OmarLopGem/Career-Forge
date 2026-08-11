@@ -470,8 +470,8 @@ export default function CalendarClient({
   }
 
   return (
-    <div className="bg-background min-h-screen">
-      <section className="max-w-7xl mx-auto px-6 py-10">
+    <div className="min-h-screen bg-background">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="inline-flex rounded-full bg-blue-soft px-4 py-2 text-sm font-medium text-brand-blue">
@@ -542,7 +542,7 @@ export default function CalendarClient({
         </div>
 
         <div className="mt-8 grid gap-8 xl:grid-cols-[1.6fr_1fr]">
-          <div className="rounded-3xl border border-border bg-surface p-6">
+          <div className="rounded-3xl border border-border bg-surface p-4 sm:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-navy">{formatMonthTitle(currentMonth)}</h2>
@@ -551,7 +551,7 @@ export default function CalendarClient({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
@@ -579,13 +579,15 @@ export default function CalendarClient({
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-7 gap-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+            <div className="mt-6 overflow-x-auto pb-2">
+              <div className="min-w-[44rem]">
+                <div className="grid grid-cols-7 gap-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                 <span key={day}>{day}</span>
               ))}
             </div>
 
-            <div className="mt-4 grid grid-cols-7 gap-3">
+                <div className="mt-4 grid grid-cols-7 gap-3">
               {monthDays.map((day, index) => {
                 const dateString = day ? formatDate(day) : null
                 const isSelected = dateString === selectedDate
@@ -599,7 +601,7 @@ export default function CalendarClient({
                     onClick={() => day && setSelectedDate(dateString)}
                     disabled={!day}
                     className={`min-h-32 rounded-2xl border p-3 text-left transition-all duration-300 ${
-                      day ? 'bg-background hover:-translate-y-0.5 hover:border-brand-blue' : 'bg-transparent border-transparent cursor-default'
+                      day ? 'bg-background hover:-translate-y-0.5 hover:border-brand-blue' : 'cursor-default border-transparent bg-transparent'
                     } ${isSelected ? 'border-brand-blue ring-2 ring-blue-soft' : 'border-border'}`}
                   >
                     {day ? (
@@ -640,6 +642,8 @@ export default function CalendarClient({
                   </button>
                 )
               })}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -753,7 +757,7 @@ export default function CalendarClient({
                           </span>
                         </div>
 
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                           <div>
                             <p className="text-text-muted">Applied</p>
                             <p className="font-semibold text-navy">{application.appliedAt || 'Not set'}</p>
@@ -1014,7 +1018,7 @@ export default function CalendarClient({
               </div>
             </label>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => setIsEventModalOpen(false)}
@@ -1303,7 +1307,7 @@ export default function CalendarClient({
               />
             </label>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => setIsApplicationModalOpen(false)}
@@ -1328,8 +1332,8 @@ export default function CalendarClient({
 
 function ModalShell({ title, description, onClose, children }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 px-6">
-      <div className="w-full max-w-3xl rounded-3xl bg-surface p-6 shadow-xl md:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-navy/60 px-4 py-6 sm:px-6 sm:py-10">
+      <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-3xl bg-surface p-5 shadow-xl sm:p-6 md:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-navy">{title}</h2>
