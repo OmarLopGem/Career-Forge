@@ -6,6 +6,8 @@ import { requestJson } from '@/lib/job-tracker/client/api.js'
 import { jobStatusLabels, jobStatusStyles } from '@/lib/job-tracker/client/constants.js'
 
 const DEFAULT_JOB_LISTINGS_PAGE_SIZE = 30
+const STABLE_LOCALE = 'en-US'
+const STABLE_TIME_ZONE = 'UTC'
 
 function getDefaultCVProfileId(cvProfiles) {
   return cvProfiles.find((profile) => profile.isDefault)?._id ?? cvProfiles[0]?._id ?? ''
@@ -21,17 +23,18 @@ function formatFetchDate(value) {
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime())
     ? value
-    : parsed.toLocaleString(undefined, {
+    : parsed.toLocaleString(STABLE_LOCALE, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
+        timeZone: STABLE_TIME_ZONE,
       })
 }
 
 function formatSalaryValue(value) {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat(STABLE_LOCALE, {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,

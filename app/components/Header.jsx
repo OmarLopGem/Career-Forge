@@ -254,10 +254,13 @@ function HeaderNavigation({ currentUser = null, pathname }) {
     }
 
     let cancelled = false;
+    const controller = new AbortController();
 
     async function loadNotificationBadge() {
       try {
-        const data = await requestJson("/api/notifications");
+        const data = await requestJson("/api/notifications", {
+          signal: controller.signal,
+        });
         if (cancelled) return;
 
         const notifications = Array.isArray(data?.notifications) ? data.notifications : [];
@@ -279,6 +282,9 @@ function HeaderNavigation({ currentUser = null, pathname }) {
           setUnreadNotificationCount(0);
           return;
         }
+        if (error?.code === "NETWORK_ERROR") {
+          return;
+        }
         console.error("Failed to load notification badge:", error);
       }
     }
@@ -296,6 +302,7 @@ function HeaderNavigation({ currentUser = null, pathname }) {
 
     return () => {
       cancelled = true;
+      controller.abort();
       window.clearInterval(intervalId);
       window.removeEventListener("focus", loadNotificationBadge);
       document.removeEventListener("visibilitychange", refreshWhenVisible);

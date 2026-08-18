@@ -64,6 +64,11 @@ describe('AuthFormClient', () => {
           lastName: 'Lopez',
           email: 'omar@example.com',
           password: 'password123',
+          requestedRole: 'user',
+          companyName: '',
+          companyWebsite: '',
+          companyIndustry: '',
+          companySize: '',
         }),
       })
     })

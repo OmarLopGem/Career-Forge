@@ -164,7 +164,7 @@ export default function CVUploadDropzone({ onFile, disabled }) {
           <p className="text-sm font-semibold text-navy">
             Drag and drop your CV here
           </p>
-          <p className="text-xs text-text-muted">PDF or DOCX, up to 5 MB</p>
+          <p className="text-xs text-text-muted">PDF up to 5 MB</p>
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
